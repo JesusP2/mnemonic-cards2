@@ -12,10 +12,9 @@
         "dist"
       ]
     },
-    "lint": {
-      "dependsOn": [
-        "^lint"
-      ]
+    "//#format-and-lint": {},
+    "//#format-and-lint:fix": {
+      "cache": false
     },
     "dev": {
       "cache": false,

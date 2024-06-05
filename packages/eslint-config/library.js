@@ -10,9 +10,6 @@ module.exports = {
     React: true,
     JSX: true,
   },
-  env: {
-    node: true,
-  },
   settings: {
     "import/resolver": {
       typescript: {

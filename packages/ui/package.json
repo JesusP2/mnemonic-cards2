@@ -9,7 +9,7 @@
     "./code": "./src/code.tsx"
   },
   "scripts": {
-    "lint": "eslint . --max-warnings 0"
+    "lint": "eslint . --ext ts,tsx --max-warnings 0"
   },
   "devDependencies": {
     "@repo/eslint-config": "workspace:*",

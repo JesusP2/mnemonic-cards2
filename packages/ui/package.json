@@ -13,6 +13,7 @@
     "./command": "./src/command.tsx",
     "./dialog": "./src/dialog.tsx",
     "./dropdown-menu": "./src/dropdown-menu.tsx",
+    "./form": "./src/form.tsx",
     "./hover-card": "./src/hover-card.tsx",
     "./input-opt": "./src/input-opt.tsx",
     "./input": "./src/input.tsx",
@@ -28,6 +29,7 @@
     "./utils": "./src/utils.ts"
   },
   "dependencies": {
+    "@hookform/resolvers": "^3.6.0",
     "@radix-ui/react-alert-dialog": "^1.0.5",
     "@radix-ui/react-avatar": "^1.0.4",
     "@radix-ui/react-checkbox": "^1.0.4",
@@ -47,8 +49,10 @@
     "input-otp": "^1.2.4",
     "lucide-react": "^0.383.0",
     "react": "19.0.0-rc-f994737d14-20240522",
+    "react-hook-form": "^7.51.5",
     "sonner": "^1.4.41",
-    "tailwind-merge": "^2.3.0"
+    "tailwind-merge": "^2.3.0",
+    "zod": "^3.23.8"
   },
   "devDependencies": {
     "@repo/typescript-config": "workspace:*",

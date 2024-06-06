@@ -1,0 +1,15 @@
+{
+  "name": "@api",
+  "version": "0.0.1",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "wrangler dev src/app.ts"
+  },
+  "dependencies": {
+    "hono": "^4.4.3"
+  },
+  "devDependencies": {
+    "wrangler": "^3.59.0"
+  }
+}

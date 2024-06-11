@@ -2,6 +2,7 @@ import { Hono } from 'hono'
 import { logger } from 'hono/logger'
 import { clerkMiddleware, getAuth } from '@hono/clerk-auth'
 import { zValidator } from '@hono/zod-validator'
+import { cors } from 'hono/cors'
 import * as z from 'zod'
 
 type Env = {
@@ -12,6 +13,7 @@ type Env = {
 }
 const app = new Hono<Env>().basePath('/api');
 
+app.use('*', cors({  origin: 'http://localhost:3000' }))
 app.use('*', logger())
 app.use('*', clerkMiddleware())
 export const ping = app.get('/ping',
@@ -21,8 +23,6 @@ export const ping = app.get('/ping',
       message: z.literal('ping')
     })),
     async (c) => {
-    const auth = getAuth(c)
-      console.log('are you logged in?:', auth)
       return c.json({ message: 'pong' })
     }
 )

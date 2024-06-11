@@ -10,6 +10,7 @@
   },
   "dependencies": {
     "@repo/ui": "workspace:*",
+    "@repo/api": "workspace:*",
     "@tanstack/react-query": "^5.40.1",
     "@tanstack/react-router": "^1.35.1",
     "lucide-react": "^0.383.0",

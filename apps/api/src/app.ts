@@ -1,11 +1,19 @@
 import { Hono } from 'hono'
 import { logger } from 'hono/logger'
+import { zValidator } from '@hono/zod-validator'
+import * as z from 'zod'
 
-const app = new Hono();
+const app = new Hono().basePath('/api');
 
 app.use('*', logger())
-app.get('/', async (c) => {
-	return c.json({ message: 'hi' })
+export const ping = app.get('/ping',
+  zValidator(
+    'query',
+    z.object({
+      message: z.literal('ping')
+    })),
+    async (c) => {
+      return c.json({ message: 'pong' })
 })
 
 // Custom Not Found Message

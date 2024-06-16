@@ -4,19 +4,31 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "wrangler dev src/app.ts"
+    "dev": "wrangler dev src/app.ts",
+    "check": "biome check --apply ./src",
+    "db:generate": "drizzle-kit generate",
+    "db:migrate": "tsx --env-file=.env ./migrate.ts",
+    "db:push": "drizzle-kit push:sqlite"
   },
   "exports": {
     "./client": "./src/client.ts"
   },
   "dependencies": {
-    "@clerk/backend": "^1.2.2",
-    "@hono/clerk-auth": "^2.0.0",
+    "@aws-sdk/client-s3": "^3.598.0",
+    "@aws-sdk/s3-request-presigner": "^3.598.0",
     "@hono/zod-validator": "^0.2.2",
+    "@libsql/client": "^0.6.2",
+    "@lucia-auth/adapter-drizzle": "^1.0.7",
+    "drizzle-orm": "^0.31.2",
     "hono": "^4.4.3",
+    "lucia": "^3.2.0",
+    "oslo": "^1.2.0",
+    "ulid-workers": "^2.1.0",
     "zod": "^3.23.8"
   },
   "devDependencies": {
+    "drizzle-kit": "^0.22.7",
+    "tsx": "^4.7.2",
     "wrangler": "^3.59.0"
   }
 }

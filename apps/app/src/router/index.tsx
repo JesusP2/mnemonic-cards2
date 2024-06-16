@@ -5,8 +5,7 @@ import {
 } from '@tanstack/react-router';
 
 const rootRoute = createRootRoute({
-  beforeLoad: async () => {
-  },
+  beforeLoad: async () => {},
 });
 const homeRoute = createRoute({
   getParentRoute: () => rootRoute,

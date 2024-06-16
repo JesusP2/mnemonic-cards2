@@ -11,7 +11,7 @@ import { TimeSpan, createDate } from 'oslo';
 import { alphabet, generateRandomString } from 'oslo/crypto';
 import { z } from 'zod';
 
-const authRoute = new Hono();
+export const authRoute = new Hono();
 
 export const signin = authRoute.post(
   '/signin',

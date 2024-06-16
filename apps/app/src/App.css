@@ -74,3 +74,23 @@
     @apply bg-background text-foreground;
   }
 }
+
+.sidebar {
+  width: 4rem;
+}
+
+.sidebar-text {
+  opacity: 0;
+  visibility: hidden;
+}
+
+body:has(.dropdown-menu-has-content) .sidebar,
+.sidebar:hover {
+  width: 18rem;
+}
+
+body:has(.dropdown-menu-has-content) .sidebar-text,
+.sidebar:hover .sidebar-text {
+  opacity: 1;
+  visibility: visible;
+}

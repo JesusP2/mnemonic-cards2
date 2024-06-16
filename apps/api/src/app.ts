@@ -5,6 +5,7 @@ import { csrf } from 'hono/csrf';
 import { logger } from 'hono/logger';
 import * as z from 'zod';
 import type { Env } from './types.js';
+import { authRoute } from './routes/auth.js';
 
 const app = new Hono<Env>().basePath('/api');
 
@@ -23,6 +24,7 @@ export const ping = app.get(
     return c.json({ message: 'pong' });
   },
 );
+app.route('/auth', authRoute)
 
 // Custom Not Found Message
 app.notFound((c) => {

@@ -8,15 +8,30 @@
     "dev": "vite",
     "build": "tsc -b && vite build",
     "lint": "biome check .",
-    "lint:fix": "biome check . --write"
+    "lint:fix": "biome check . --write",
+    "db:generate": "drizzle-kit generate",
+    "db:migrate": "tsx --env-file=.env ./migrate.ts",
+    "db:push": "drizzle-kit push:sqlite"
   },
   "dependencies": {
+    "@aws-sdk/client-s3": "^3.598.0",
+    "@aws-sdk/s3-request-presigner": "^3.598.0",
     "@biomejs/biome": "^1.8.2",
+    "@conform-to/zod": "^1.1.4",
     "@hono/node-server": "^1.11.4",
+    "@hono/zod-validator": "^0.2.2",
+    "@libsql/client": "^0.6.2",
+    "@lucia-auth/adapter-drizzle": "^1.0.7",
+    "dotenv": "^16.4.5",
+    "drizzle-orm": "^0.31.2",
     "hono": "^4.4.7",
+    "lucia": "^3.2.0",
+    "oslo": "^1.2.0",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
-    "tsx": "^4.15.7"
+    "tsx": "^4.15.7",
+    "ulid-workers": "^2.1.0",
+    "zod": "^3.23.8"
   },
   "devDependencies": {
     "@hono/vite-dev-server": "^0.12.2",
@@ -25,6 +40,7 @@
     "@types/react-dom": "^18.3.0",
     "@vitejs/plugin-react": "^4.3.1",
     "typescript": "^5.2.2",
+    "drizzle-kit": "^0.22.7",
     "vite": "^5.3.1"
   }
 }

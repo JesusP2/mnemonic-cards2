@@ -1,13 +1,16 @@
-import { Hono } from "hono"
-import { serve } from "@hono/node-server"
-import { serveStatic } from "@hono/node-server/serve-static"
-import { readFile } from "node:fs/promises"
+import { readFile } from 'node:fs/promises';
+import { serve } from '@hono/node-server';
+import { serveStatic } from '@hono/node-server/serve-static';
+import { Hono } from 'hono';
 
-let html = await readFile(import.meta.env.PROD ? "dist/index.html" : "index.html", "utf8")
+const isProd = process.env.NODE_ENV === 'production';
+let html = await readFile(isProd ? 'build/index.html' : 'index.html', 'utf8');
 
-if (!import.meta.env.PROD) {
+if (!isProd) {
   // Inject Vite client code to the HTML
-  html = html.replace("<head>", `
+  html = html.replace(
+    '<head>',
+    `
     <script type="module">
       import RefreshRuntime from "/@react-refresh"
       RefreshRuntime.injectIntoGlobalHook(window)
@@ -16,17 +19,18 @@ if (!import.meta.env.PROD) {
       window.__vite_plugin_react_preamble_installed__ = true
     </script>
     <script type="module" src="/@vite/client"></script>
-    `)
+    `,
+  );
 }
 
 const app = new Hono()
-  .use("/assets/*", serveStatic({ root: import.meta.env.PROD ? "build/" : "./" })) // path must end with '/'
-  .get("/*", c => c.html(html))
+  .use('/assets/*', serveStatic({ root: isProd ? 'build/' : './' })) // path must end with '/'
+  .get('/*', (c) => c.html(html));
 
-export default app
+export default app;
 
-if (import.meta.env.PROD) {
-  serve({ ...app, port: 3000 }, info => {
+if (isProd) {
+  serve({ ...app, port: 3000 }, (info) => {
     console.log(`Listening on http://localhost:${info.port}`);
   });
 }

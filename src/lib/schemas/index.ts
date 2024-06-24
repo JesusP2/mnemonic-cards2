@@ -17,3 +17,7 @@ export const signupSchema = signinSchema.merge(
 export const emailVerificationSchema = z.object({
   email: z.string().email(),
 });
+
+export const profileSchema = z.object({
+  username: z.string().min(3, 'Username must be at least  3 character long.'),
+})

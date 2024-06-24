@@ -1,6 +1,6 @@
 import { useForm } from '@conform-to/react';
 import { parseWithZod } from '@conform-to/zod';
-import { Link, redirect, useNavigate } from '@tanstack/react-router';
+import { Link, useNavigate } from '@tanstack/react-router';
 import { useState } from 'react';
 import { LuEye, LuEyeOff } from 'react-icons/lu';
 import { Button } from '../../components//ui/button';

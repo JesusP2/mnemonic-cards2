@@ -29,8 +29,14 @@ const homeRoute = createRoute({
   component: lazyRouteComponent(() => import('../pages/home')),
 });
 
-const profileRoute = createRoute({
+const settingsRoute = createRoute({
   getParentRoute: () => mainLayout,
+  path: 'settings',
+  component: lazyRouteComponent(() => import('../pages/settings-layout')),
+})
+
+const profileRoute = createRoute({
+  getParentRoute: () => settingsRoute,
   path: 'profile',
   component: lazyRouteComponent(() => import('../pages/profile')),
 })
@@ -66,7 +72,7 @@ export const forgotPasswordRoute = createRoute({
 });
 
 const routeTree = rootRoute.addChildren([
-  mainLayout.addChildren([homeRoute, profileRoute]),
+  mainLayout.addChildren([homeRoute, settingsRoute.addChildren([profileRoute])]),
   authLayout.addChildren([signinRoute, signupRoute, forgotPasswordRoute]),
 ]);
 export const router = createRouter({ routeTree, defaultPreload: 'intent' });

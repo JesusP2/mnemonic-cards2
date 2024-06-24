@@ -23,6 +23,9 @@ importers:
       '@conform-to/zod':
         specifier: ^1.1.4
         version: 1.1.5(zod@3.23.8)
+      '@fontsource/geist-sans':
+        specifier: ^5.0.3
+        version: 5.0.3
       '@hono/node-server':
         specifier: ^1.11.4
         version: 1.11.4
@@ -1015,6 +1018,9 @@ packages:
 
   '@floating-ui/utils@0.2.2':
     resolution: {integrity: sha512-J4yDIIthosAsRZ5CPYP/jQvUAQtlZTTD/4suA08/FEnlxqW3sKS9iAhgsa9VYLZ6vDHn/ixJgIqRQPotoBjxIw==}
+
+  '@fontsource/geist-sans@5.0.3':
+    resolution: {integrity: sha512-oGwoSIqNPMvjtCwj1lZaEr47MeiG27XPhypwkF643u1TQduvwbm3V3hYB01JekeaT34SAGP4I1h+WCdRpJkcwA==}
 
   '@hono/node-server@1.11.4':
     resolution: {integrity: sha512-8TOiiiAqcFC6f62P7M9p6adQREAlWdVi1awehAwgWW+3R65/rKzHnLARO/Hu/466z01VNViBoogqatqXJMyItA==}
@@ -4238,6 +4244,8 @@ snapshots:
       react-dom: 18.3.1(react@18.3.1)
 
   '@floating-ui/utils@0.2.2': {}
+
+  '@fontsource/geist-sans@5.0.3': {}
 
   '@hono/node-server@1.11.4': {}
 

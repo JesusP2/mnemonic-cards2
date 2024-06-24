@@ -30,7 +30,6 @@ const app = new Hono();
 app.route('/api/auth', authRoute);
 app.get('/api/profile', async (c) => {
   const sessionId = getCookie(c, lucia.sessionCookieName);
-  console.log('yo am I even running?:', sessionId);
   if (sessionId) {
     const { user } = await lucia.validateSession(sessionId);
     if (user) {

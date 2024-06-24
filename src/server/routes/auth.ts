@@ -109,7 +109,7 @@ authRoute.post('/signup', async (c) => {
   return c.json(null);
 });
 
-export const emailVerification = authRoute.post(
+authRoute.post(
   '/email-verification',
   async (c) => {
     const formData = await c.req.formData();
@@ -152,3 +152,17 @@ export const emailVerification = authRoute.post(
     }
   },
 );
+
+authRoute.post('/signout', async (c) => {
+  const cookie = getCookie(c, lucia.sessionCookieName)
+  if (!cookie) {
+    return c.redirect('/auth/signin')
+  }
+  const { session } = await lucia.validateSession(cookie)
+  if (session) {
+    await lucia.invalidateSession(session.id)
+  }
+    const blankSession = lucia.createBlankSessionCookie();
+    setCookie(c, blankSession.name, blankSession.value);
+  return c.redirect('/auth/signin')
+})

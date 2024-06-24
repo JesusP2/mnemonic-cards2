@@ -39,7 +39,7 @@ export function UserDropdown({
             <DropdownMenuShortcut>⌘S</DropdownMenuShortcut>
           </DropdownMenuItem>
         </Link>
-        <form action="/auth/signout" method="post">
+        <form action="/api/auth/signout" method="post">
           <DropdownMenuItem asChild>
             <button className="w-full">
               Log out

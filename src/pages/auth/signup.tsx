@@ -1,5 +1,11 @@
 import { useForm } from '@conform-to/react';
-import { Link } from '@tanstack/react-router';
+import { parseWithZod } from '@conform-to/zod';
+import {
+  Link,
+  redirect,
+  useLocation,
+  useNavigate,
+} from '@tanstack/react-router';
 import { useState } from 'react';
 import { LuEye, LuEyeOff } from 'react-icons/lu';
 import { Button } from '../../components//ui/button';
@@ -12,30 +18,32 @@ import {
 } from '../../components/ui/card';
 import { Input } from '../../components/ui/input';
 import { Label } from '../../components/ui/label';
-import { parseWithZod } from '@conform-to/zod';
+import { queryClient } from '../../lib/query-client';
 import { signupSchema } from '../../lib/schemas';
 
 export default function SignupForm() {
+  const navigate = useNavigate({ from: '/auth/signup' });
   const [viewPass, setViewPass] = useState(false);
-  const [lastResult, setLastResult] = useState(null)
+  const [lastResult, setLastResult] = useState(null);
   const [form, fields] = useForm({
     lastResult,
     shouldValidate: 'onBlur',
     shouldRevalidate: 'onBlur',
     onValidate: ({ formData }) => {
-      return parseWithZod(formData, { schema: signupSchema })
+      return parseWithZod(formData, { schema: signupSchema });
     },
-    onSubmit: async (e, context) =>{
-      e.preventDefault()
+    onSubmit: async (e, context) => {
+      e.preventDefault();
       const res = await fetch('/api/auth/signup', {
         method: 'POST',
-        body: context.formData
-      })
-      if (!res.ok){
-        const json = await res.json()
-        setLastResult(json)
+        body: context.formData,
+      });
+      if (!res.ok) {
+        const json = await res.json();
+        setLastResult(json);
       }
-      return redirect({ to: '/main/verify-email' })
+      await queryClient.invalidateQueries();
+      navigate({ to: '/home' });
     },
     defaultValue: {
       username: '',

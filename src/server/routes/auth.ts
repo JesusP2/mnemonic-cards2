@@ -19,7 +19,7 @@ authRoute.post('/signin', async (c) => {
   }
   const sessionId = getCookie(c, lucia.sessionCookieName);
   if (sessionId) {
-    return c.redirect('/');
+    return c.json(null);
   }
   try {
     const users = await db
@@ -42,7 +42,7 @@ authRoute.post('/signin', async (c) => {
     const session = await lucia.createSession(user.id, {});
     const cookie = lucia.createSessionCookie(session.id);
     setCookie(c, cookie.name, cookie.value);
-    return c.json(null)
+    return c.json(null);
   } catch (err) {
     return c.json(
       submission.reply({
@@ -64,7 +64,7 @@ authRoute.post('/signup', async (c) => {
   }
   const sessionId = getCookie(c, lucia.sessionCookieName);
   if (sessionId) {
-    return c.redirect('/');
+    return c.json(null);
   }
   const hashedPassword = await hashPassword(submission.value.password);
   const userId = createUlid();
@@ -104,9 +104,9 @@ authRoute.post('/signup', async (c) => {
   const cookie = lucia.createSessionCookie(session.id);
   setCookie(c, cookie.name, cookie.value);
   if (submission.value.email) {
-    return c.redirect('/verify-email');
+    return c.json(null);
   }
-  return c.redirect('/');
+  return c.json(null);
 });
 
 export const emailVerification = authRoute.post(
@@ -121,14 +121,17 @@ export const emailVerification = authRoute.post(
     }
     const sessionId = getCookie(c, lucia.sessionCookieName);
     if (!sessionId) {
-      return c.redirect('/auth/signin');
+      return c.json(null);
+      // return c.redirect('/auth/signin');
     }
     const { user } = await lucia.validateSession(sessionId);
     if (!user) {
-      return c.redirect('/auth/signin');
+      return c.json(null);
+      // return c.redirect('/auth/signin');
     }
     if (user.email) {
-      return c.redirect('/');
+      return c.json(null);
+      // return c.redirect('/');
     }
 
     try {

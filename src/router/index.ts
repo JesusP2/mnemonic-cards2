@@ -5,20 +5,19 @@ import {
   lazyRouteComponent,
   redirect,
 } from '@tanstack/react-router';
-import { queryClient } from '../lib/query-client';
 import { profileQueryOptions } from '../lib/queries';
+import { queryClient } from '../lib/query-client';
+import { create } from 'domain';
 
-const rootRoute = createRootRoute({
-  beforeLoad: async () => queryClient.ensureQueryData(profileQueryOptions)
-});
+const rootRoute = createRootRoute({});
 
 const mainLayout = createRoute({
   getParentRoute: () => rootRoute,
-  path: '',
+  path: '/',
   beforeLoad: async () => {
-    const profile = await queryClient.ensureQueryData(profileQueryOptions)
+    const profile = await queryClient.fetchQuery(profileQueryOptions);
     if (!profile) {
-      throw redirect({ to: '/auth/signin'})
+      throw redirect({ to: '/auth/signin' });
     }
   },
   component: lazyRouteComponent(() => import('../pages/main-layout')),
@@ -30,13 +29,19 @@ const homeRoute = createRoute({
   component: lazyRouteComponent(() => import('../pages/home')),
 });
 
+const profileRoute = createRoute({
+  getParentRoute: () => mainLayout,
+  path: 'profile',
+  component: lazyRouteComponent(() => import('../pages/profile')),
+})
+
 const authLayout = createRoute({
   getParentRoute: () => rootRoute,
   path: 'auth',
   beforeLoad: async () => {
-    const profile = await queryClient.ensureQueryData(profileQueryOptions)
+    const profile = await queryClient.fetchQuery(profileQueryOptions);
     if (profile) {
-      throw redirect({ to: '/main/home'})
+      throw redirect({ to: '/home' });
     }
   },
   component: lazyRouteComponent(() => import('../pages/auth-layout')),
@@ -61,7 +66,7 @@ export const forgotPasswordRoute = createRoute({
 });
 
 const routeTree = rootRoute.addChildren([
-  mainLayout.addChildren([homeRoute]),
+  mainLayout.addChildren([homeRoute, profileRoute]),
   authLayout.addChildren([signinRoute, signupRoute, forgotPasswordRoute]),
 ]);
 export const router = createRouter({ routeTree, defaultPreload: 'intent' });

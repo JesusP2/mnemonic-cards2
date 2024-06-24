@@ -10,6 +10,7 @@ import {
   DropdownMenuShortcut,
   DropdownMenuTrigger,
 } from './ui/dropdown-menu';
+import { Link } from '@tanstack/react-router';
 
 export function UserDropdown({
   user,
@@ -32,12 +33,12 @@ export function UserDropdown({
       <DropdownMenuContent>
         <DropdownMenuLabel>{user.username}</DropdownMenuLabel>
         <DropdownMenuSeparator />
-        <a href="/profile">
+        <Link to="/profile">
           <DropdownMenuItem>
             Profile
             <DropdownMenuShortcut>⌘S</DropdownMenuShortcut>
           </DropdownMenuItem>
-        </a>
+        </Link>
         <form action="/auth/signout" method="post">
           <DropdownMenuItem asChild>
             <button className="w-full">

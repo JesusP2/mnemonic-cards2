@@ -7,7 +7,6 @@ import {
 } from '@tanstack/react-router';
 import { profileQueryOptions } from '../lib/queries';
 import { queryClient } from '../lib/query-client';
-import { create } from 'domain';
 
 const rootRoute = createRootRoute({});
 
@@ -33,13 +32,13 @@ const settingsRoute = createRoute({
   getParentRoute: () => mainLayout,
   path: 'settings',
   component: lazyRouteComponent(() => import('../pages/settings-layout')),
-})
+});
 
 const profileRoute = createRoute({
   getParentRoute: () => settingsRoute,
   path: 'profile',
   component: lazyRouteComponent(() => import('../pages/profile')),
-})
+});
 
 const authLayout = createRoute({
   getParentRoute: () => rootRoute,
@@ -72,7 +71,10 @@ export const forgotPasswordRoute = createRoute({
 });
 
 const routeTree = rootRoute.addChildren([
-  mainLayout.addChildren([homeRoute, settingsRoute.addChildren([profileRoute])]),
+  mainLayout.addChildren([
+    homeRoute,
+    settingsRoute.addChildren([profileRoute]),
+  ]),
   authLayout.addChildren([signinRoute, signupRoute, forgotPasswordRoute]),
 ]);
 export const router = createRouter({ routeTree, defaultPreload: 'intent' });

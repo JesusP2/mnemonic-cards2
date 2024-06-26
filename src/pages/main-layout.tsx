@@ -11,7 +11,7 @@ export default function Layout() {
           <UserDropdown
             user={{ username: 'lotus', email: 'jesusperez@gmail.com' }}
           />
-          </div>
+        </div>
       </nav>
       <main className="max-w-7xl mx-auto p-6">
         <Outlet />

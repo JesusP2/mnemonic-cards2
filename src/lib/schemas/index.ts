@@ -20,4 +20,12 @@ export const emailVerificationSchema = z.object({
 
 export const profileSchema = z.object({
   username: z.string().min(3, 'Username must be at least  3 character long.'),
-})
+  email: z.string().email().nullish(),
+});
+
+// no email?
+// you can input an email or leave it empty
+//
+//
+//  email?
+//  you must have an email

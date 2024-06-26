@@ -1,5 +1,5 @@
-import { TypographyH3 } from '../components/ui/typography';
 import { Link, Outlet } from '@tanstack/react-router';
+import { TypographyH3 } from '../components/ui/typography';
 
 export default function Settings() {
   return (

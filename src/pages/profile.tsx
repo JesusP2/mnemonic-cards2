@@ -1,20 +1,34 @@
-import { TypographyH4 } from '../components/ui/typography';
-import { Input } from '../components/ui/input';
-import { Label } from '../components/ui/label';
-import { Button } from '../components/ui/button';
 import { useForm } from '@conform-to/react';
 import { parseWithZod } from '@conform-to/zod';
-import { profileSchema } from '../lib/schemas';
+import { useQuery } from '@tanstack/react-query';
 import { useState } from 'react';
+import { z } from 'zod';
+import { Button } from '../components/ui/button';
+import { Input } from '../components/ui/input';
+import { Label } from '../components/ui/label';
+import { TypographyH4 } from '../components/ui/typography';
+import { profileQueryOptions } from '../lib/queries';
+import { profileSchema } from '../lib/schemas';
 
 export default function Profile() {
-  const [lastResult, setLastResult] = useState(null)
+  const query = useQuery(profileQueryOptions);
+  const [lastResult, setLastResult] = useState(null);
   const [form, fields] = useForm({
     lastResult,
     shouldValidate: 'onBlur',
     shouldRevalidate: 'onBlur',
     onValidate: ({ formData }) => {
-      return parseWithZod(formData, { schema: profileSchema });
+      return parseWithZod(formData, {
+        schema: profileSchema.superRefine((data, ctx) => {
+          if (query.data?.email && !data.email) {
+            ctx.addIssue({
+              code: z.ZodIssueCode.custom,
+              path: ['email'],
+              message: 'Required field',
+            });
+          }
+        }),
+      });
     },
     onSubmit: async (e, context) => {
       e.preventDefault();
@@ -74,7 +88,9 @@ export default function Profile() {
             This field is private, only you can see your email.
           </span>
         </div>
-        <Button variant="default" className="w-36">Save changes</Button>
+        <Button variant="default" className="w-36">
+          Save changes
+        </Button>
       </form>
     </>
   );

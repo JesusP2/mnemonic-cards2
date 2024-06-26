@@ -1,3 +1,4 @@
+import { Link } from '@tanstack/react-router';
 import { FiChevronRight } from 'react-icons/fi';
 import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar';
 import { Button } from './ui/button';
@@ -10,7 +11,6 @@ import {
   DropdownMenuShortcut,
   DropdownMenuTrigger,
 } from './ui/dropdown-menu';
-import { Link } from '@tanstack/react-router';
 
 export function UserDropdown({
   user,

@@ -87,25 +87,25 @@ authRoute.post('/signup', async (c) => {
       );
     }
     await db.transaction(async (tx) => {
-    await tx.insert(userTable).values({
-      id: userId,
-      username: submission.value.username,
-      password: hashedPassword,
-    });
+      await tx.insert(userTable).values({
+        id: userId,
+        username: submission.value.username,
+        password: hashedPassword,
+      });
       const code = generateRandomString(5, alphabet('0-9'));
       console.log(code);
       if (submission.value.email) {
         await tx.insert(emailVerificationTable).values({
-        id: createUlid(),
-        code: code,
-        userId: userId,
-        email: submission.value.email,
-        expiresAt: createDate(new TimeSpan(15, 'm')).toISOString(),
-        })
+          id: createUlid(),
+          code: code,
+          userId: userId,
+          email: submission.value.email,
+          expiresAt: createDate(new TimeSpan(15, 'm')).toISOString(),
+        });
       }
-    })
+    });
   } catch (err) {
-    console.error(err)
+    console.error(err);
     return c.json(
       submission.reply({
         fieldErrors: {

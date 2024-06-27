@@ -70,12 +70,25 @@ export const forgotPasswordRoute = createRoute({
   component: lazyRouteComponent(() => import('../pages/auth/forgot-password')),
 });
 
+export const emailVerificationRoute = createRoute({
+  getParentRoute: () => authLayout,
+  path: 'email-verification',
+  component: lazyRouteComponent(
+    () => import('../pages/auth/email-verification'),
+  ),
+});
+
 const routeTree = rootRoute.addChildren([
   mainLayout.addChildren([
     homeRoute,
     settingsRoute.addChildren([profileRoute]),
   ]),
-  authLayout.addChildren([signinRoute, signupRoute, forgotPasswordRoute]),
+  authLayout.addChildren([
+    signinRoute,
+    signupRoute,
+    forgotPasswordRoute,
+    emailVerificationRoute,
+  ]),
 ]);
 export const router = createRouter({ routeTree, defaultPreload: 'intent' });
 

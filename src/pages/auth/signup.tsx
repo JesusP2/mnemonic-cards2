@@ -43,6 +43,10 @@ export default function SignupForm() {
         setLastResult(json);
       }
       await queryClient.invalidateQueries();
+      const email = context.formData.get('email');
+      if (typeof email === 'string') {
+        navigate({ to: '/email-verification' });
+      }
       navigate({ to: '/home' });
     },
     defaultValue: {

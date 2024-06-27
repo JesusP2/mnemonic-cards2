@@ -43,7 +43,8 @@ export default function Profile() {
       }
     },
     defaultValue: {
-      username: '',
+      username: query.data?.username,
+      email: query.data?.email,
     },
   });
   return (

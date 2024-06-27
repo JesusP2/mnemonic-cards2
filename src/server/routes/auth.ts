@@ -5,7 +5,7 @@ import { setCookie } from 'hono/cookie';
 import { TimeSpan, createDate } from 'oslo';
 import { alphabet, generateRandomString } from 'oslo/crypto';
 import { z } from 'zod';
-import { profileSchema, signinSchema, signupSchema } from '../../lib/schemas';
+import { codeSchema, profileSchema, signinSchema, signupSchema } from '../../lib/schemas';
 import { db } from '../db/pool';
 import { emailVerificationTable, userTable } from '../db/schema';
 import { createUlid, hashPassword, lucia } from '../lucia';
@@ -92,8 +92,7 @@ authRoute.post('/signup', async (c) => {
         username: submission.value.username,
         password: hashedPassword,
       });
-      const code = generateRandomString(5, alphabet('0-9'));
-      console.log(code);
+      const code = generateRandomString(6, alphabet('0-9'));
       if (submission.value.email) {
         await tx.insert(emailVerificationTable).values({
           id: createUlid(),
@@ -105,7 +104,6 @@ authRoute.post('/signup', async (c) => {
       }
     });
   } catch (err) {
-    console.error(err);
     return c.json(
       submission.reply({
         fieldErrors: {
@@ -151,8 +149,7 @@ authRoute.put('/profile', async (c) => {
         })
         .where(eq(userTable.id, isUserLoggedIn.data.user.id));
     }
-    const code = generateRandomString(5, alphabet('0-9'));
-    console.log(code);
+    const code = generateRandomString(6, alphabet('0-9'));
     if (email) {
       await tx
         .delete(emailVerificationTable)
@@ -175,7 +172,7 @@ authRoute.post('/email-verification', async (c) => {
   }
   const formData = await c.req.formData();
   const submission = parseWithZod(formData, {
-    schema: z.object({ code: z.string().length(5) }),
+    schema: codeSchema,
   });
   if (submission.status !== 'success') {
     return c.json(submission.reply());

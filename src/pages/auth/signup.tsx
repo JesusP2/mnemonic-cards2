@@ -2,8 +2,6 @@ import { useForm } from '@conform-to/react';
 import { parseWithZod } from '@conform-to/zod';
 import {
   Link,
-  redirect,
-  useLocation,
   useNavigate,
 } from '@tanstack/react-router';
 import { useState } from 'react';
@@ -44,8 +42,11 @@ export default function SignupForm() {
       }
       await queryClient.invalidateQueries();
       const email = context.formData.get('email');
+      console.log('hello am I even bein g hit????', email, typeof email)
+      console.log(email)
       if (typeof email === 'string') {
         navigate({ to: '/email-verification' });
+        return;
       }
       navigate({ to: '/home' });
     },

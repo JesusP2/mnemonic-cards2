@@ -23,9 +23,6 @@ export const profileSchema = z.object({
   email: z.string().email().nullish(),
 });
 
-// no email?
-// you can input an email or leave it empty
-//
-//
-//  email?
-//  you must have an email
+export const codeSchema = z.object({
+  code: z.string().length(6)
+})

@@ -1,3 +1,9 @@
+import { OTPForm } from '../../components/form-otp';
+
 export default function EmailVerification() {
-  return <div>hello</div>;
+  return (
+    <main className="grid place-items-center h-screen">
+      <OTPForm />
+    </main>
+  );
 }

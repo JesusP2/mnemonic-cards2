@@ -33,7 +33,7 @@ export function UserDropdown({
       <DropdownMenuContent>
         <DropdownMenuLabel>{user.username}</DropdownMenuLabel>
         <DropdownMenuSeparator />
-        <Link to="/profile">
+        <Link to="/settings/profile">
           <DropdownMenuItem>
             Profile
             <DropdownMenuShortcut>⌘S</DropdownMenuShortcut>

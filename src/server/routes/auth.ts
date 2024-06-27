@@ -14,7 +14,7 @@ import { checkUserLogin } from '../utils';
 export const authRoute = new Hono();
 authRoute.post('/signin', async (c) => {
   const isUserLoggedIn = await checkUserLogin(c);
-  if (!isUserLoggedIn.success) {
+  if (isUserLoggedIn.success) {
     return c.json(null, 403);
   }
   const formData = await c.req.formData();
@@ -59,14 +59,14 @@ authRoute.post('/signin', async (c) => {
 });
 
 authRoute.post('/signup', async (c) => {
+  const isUserLoggedIn = await checkUserLogin(c);
+  if (isUserLoggedIn.success) {
+    return c.json(null, 403);
+  }
   const formData = await c.req.formData();
   const submission = parseWithZod(formData, { schema: signupSchema });
   if (submission.status !== 'success') {
     return c.json(submission.reply(), 400);
-  }
-  const isUserLoggedIn = await checkUserLogin(c);
-  if (!isUserLoggedIn.success) {
-    return c.json(null, 403);
   }
   const hashedPassword = await hashPassword(submission.value.password);
   const userId = createUlid();
@@ -86,13 +86,26 @@ authRoute.post('/signup', async (c) => {
         400,
       );
     }
-    await db.insert(userTable).values({
+    await db.transaction(async (tx) => {
+    await tx.insert(userTable).values({
       id: userId,
       username: submission.value.username,
-      email: submission.value.email,
       password: hashedPassword,
     });
+      const code = generateRandomString(5, alphabet('0-9'));
+      console.log(code);
+      if (submission.value.email) {
+        await tx.insert(emailVerificationTable).values({
+        id: createUlid(),
+        code: code,
+        userId: userId,
+        email: submission.value.email,
+        expiresAt: createDate(new TimeSpan(15, 'm')).toISOString(),
+        })
+      }
+    })
   } catch (err) {
+    console.error(err)
     return c.json(
       submission.reply({
         fieldErrors: {
@@ -129,18 +142,21 @@ authRoute.put('/profile', async (c) => {
       });
     }
   });
-  db.transaction(async (tx) => {
+  await db.transaction(async (tx) => {
     if (username !== isUserLoggedIn.data.user.username) {
       await tx
         .update(userTable)
         .set({
           username: username,
         })
-        .where(eq(userTable.username, username));
+        .where(eq(userTable.id, isUserLoggedIn.data.user.id));
     }
     const code = generateRandomString(5, alphabet('0-9'));
     console.log(code);
     if (email) {
+      await tx
+        .delete(emailVerificationTable)
+        .where(eq(emailVerificationTable.userId, isUserLoggedIn.data.user.id));
       await tx.insert(emailVerificationTable).values({
         id: createUlid(),
         code: code,
@@ -192,7 +208,7 @@ authRoute.post('/email-verification', async (c) => {
   }
 
   try {
-    db.transaction(async (tx) => {
+    await db.transaction(async (tx) => {
       await tx
         .delete(emailVerificationTable)
         .where(eq(emailVerificationTable.userId, isUserLoggedIn.data.user.id));

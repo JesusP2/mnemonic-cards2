@@ -52,7 +52,7 @@ export const usersDeckTable = sqliteTable('user_deck', {
 export const emailVerificationTable = sqliteTable('email_verification', {
   id: text('id').notNull().primaryKey(),
   code: text('code').notNull(),
-  userId: text('user_id').notNull(),
+  userId: text('user_id').notNull().unique(),
   email: text('email').notNull(),
   expiresAt: text('expires_at'),
 });

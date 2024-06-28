@@ -1,24 +1,18 @@
 import { useForm } from '@conform-to/react';
+import { parseWithZod } from '@conform-to/zod';
+import { useState } from 'react';
+import { codeSchema } from '../lib/schemas';
 import { Button } from './ui/button';
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from './ui/card';
 import {
   InputOTP,
   InputOTPGroup,
   InputOTPSeparator,
   InputOTPSlot,
 } from './ui/input-otp';
-import { useState } from 'react';
-import { codeSchema } from '../lib/schemas';
-import { parseWithZod } from '@conform-to/zod';
-import { Link } from '@tanstack/react-router';
 
-export function OTPForm() {
+export function OTPForm({
+  onSuccess,
+}: { onSuccess?: () => PromiseLike<void> | void }) {
   const [lastResult, setLastResult] = useState(null);
   const [form, fields] = useForm({
     lastResult,
@@ -37,44 +31,29 @@ export function OTPForm() {
         const json = await res.json();
         setLastResult(json);
       }
+      await onSuccess?.();
     },
     defaultValue: {
       code: '',
     },
   });
   return (
-    <Card className="max-w-sm">
-      <CardHeader>
-        <CardTitle className="text-2xl text-center">
-          Email verification
-        </CardTitle>
-        <CardDescription className="text-center">
-          We've sent a 6-digit verification code to your email. Enter the code
-          below to continue.
-        </CardDescription>
-      </CardHeader>
-      <CardContent className="pt-6 grid place-items-center">
-        <form method="post" id={form.id} onSubmit={form.onSubmit}>
-          <InputOTP maxLength={6} id="code" name="code">
-            <InputOTPGroup>
-              <InputOTPSlot index={0} />
-              <InputOTPSlot index={1} />
-              <InputOTPSlot index={2} />
-            </InputOTPGroup>
-            <InputOTPSeparator />
-            <InputOTPGroup>
-              <InputOTPSlot index={3} />
-              <InputOTPSlot index={4} />
-              <InputOTPSlot index={5} />
-            </InputOTPGroup>
-          </InputOTP>
-          <span className="text-sm text-red-500">{fields.code.errors}</span>
-          <Button className="w-full mt-6">Verify</Button>
-        </form>
-        <Link className="text-stone-500 text-sm mt-2 underline hover:text-gray-600" to="/home">
-          Verify email in other moment
-        </Link>
-      </CardContent>
-    </Card>
+    <form method="post" id={form.id} onSubmit={form.onSubmit}>
+      <InputOTP maxLength={6} id="code" name="code">
+        <InputOTPGroup>
+          <InputOTPSlot index={0} />
+          <InputOTPSlot index={1} />
+          <InputOTPSlot index={2} />
+        </InputOTPGroup>
+        <InputOTPSeparator />
+        <InputOTPGroup>
+          <InputOTPSlot index={3} />
+          <InputOTPSlot index={4} />
+          <InputOTPSlot index={5} />
+        </InputOTPGroup>
+      </InputOTP>
+      <span className="text-sm text-red-500">{fields.code.errors}</span>
+      <Button className="w-full mt-6">Verify</Button>
+    </form>
   );
 }

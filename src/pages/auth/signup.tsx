@@ -1,9 +1,6 @@
 import { useForm } from '@conform-to/react';
 import { parseWithZod } from '@conform-to/zod';
-import {
-  Link,
-  useNavigate,
-} from '@tanstack/react-router';
+import { Link, useNavigate } from '@tanstack/react-router';
 import { useState } from 'react';
 import { LuEye, LuEyeOff } from 'react-icons/lu';
 import { Button } from '../../components//ui/button';
@@ -41,18 +38,10 @@ export default function SignupForm() {
         setLastResult(json);
       }
       await queryClient.invalidateQueries();
-      const email = context.formData.get('email');
-      console.log('hello am I even bein g hit????', email, typeof email)
-      console.log(email)
-      if (typeof email === 'string') {
-        navigate({ to: '/email-verification' });
-        return;
-      }
       navigate({ to: '/home' });
     },
     defaultValue: {
       username: '',
-      email: '',
       password: '',
     },
   });
@@ -75,15 +64,6 @@ export default function SignupForm() {
             <span className="text-sm text-red-500">
               {fields.username.errors}
             </span>
-          </div>
-          <div className="grid gap-2">
-            <Label htmlFor="username">Email</Label>
-            <Input
-              id="username"
-              name="email"
-              placeholder="johndoe@example.com"
-            />
-            <span className="text-sm text-red-500">{fields.email.errors}</span>
           </div>
           <div className="grid gap-2">
             <div className="flex items-center gap-x-4">

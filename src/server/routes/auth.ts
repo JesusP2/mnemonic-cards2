@@ -2,12 +2,27 @@ import { parseWithZod } from '@conform-to/zod';
 import { and, eq } from 'drizzle-orm';
 import { Hono } from 'hono';
 import { setCookie } from 'hono/cookie';
-import { TimeSpan, createDate } from 'oslo';
+import { generateIdFromEntropySize } from 'lucia';
+import { TimeSpan, createDate, isWithinExpirationDate } from 'oslo';
 import { alphabet, generateRandomString } from 'oslo/crypto';
+import { sha256 } from 'oslo/crypto';
+import { encodeHex } from 'oslo/encoding';
 import { z } from 'zod';
-import { codeSchema, profileSchema, signinSchema, signupSchema } from '../../lib/schemas';
+import {
+  changePasswordSchema,
+  codeSchema,
+  profileSchema,
+  resetTokenSchema,
+  signinSchema,
+  signupSchema,
+  validateResetTokenSchema,
+} from '../../lib/schemas';
 import { db } from '../db/pool';
-import { emailVerificationTable, userTable } from '../db/schema';
+import {
+  emailVerificationTable,
+  resetTokenTable,
+  userTable,
+} from '../db/schema';
 import { createUlid, hashPassword, lucia } from '../lucia';
 import { checkUserLogin } from '../utils';
 
@@ -28,8 +43,8 @@ authRoute.post('/signin', async (c) => {
       .from(userTable)
       .where(eq(userTable.username, submission.value.username));
     const user = users[0];
-    const hashedPassword = await hashPassword(submission.value.password);
-    if (!user || user.password !== hashedPassword) {
+    const passwordHash = await hashPassword(submission.value.password);
+    if (!user || user.password !== passwordHash) {
       return c.json(
         submission.reply({
           fieldErrors: {
@@ -42,7 +57,7 @@ authRoute.post('/signin', async (c) => {
     }
     const session = await lucia.createSession(user.id, {});
     const cookie = lucia.createSessionCookie(session.id);
-    setCookie(c, cookie.name, cookie.value);
+    setCookie(c, cookie.name, cookie.value, cookie.attributes);
     //doesnt matter what is returned as long as it's a 2xx code
     return c.json(null, 200);
   } catch (err) {
@@ -68,7 +83,7 @@ authRoute.post('/signup', async (c) => {
   if (submission.status !== 'success') {
     return c.json(submission.reply(), 400);
   }
-  const hashedPassword = await hashPassword(submission.value.password);
+  const passwordHash = await hashPassword(submission.value.password);
   const userId = createUlid();
   try {
     const users = await db
@@ -86,22 +101,10 @@ authRoute.post('/signup', async (c) => {
         400,
       );
     }
-    await db.transaction(async (tx) => {
-      await tx.insert(userTable).values({
-        id: userId,
-        username: submission.value.username,
-        password: hashedPassword,
-      });
-      const code = generateRandomString(6, alphabet('0-9'));
-      if (submission.value.email) {
-        await tx.insert(emailVerificationTable).values({
-          id: createUlid(),
-          code: code,
-          userId: userId,
-          email: submission.value.email,
-          expiresAt: createDate(new TimeSpan(15, 'm')).toISOString(),
-        });
-      }
+    await db.insert(userTable).values({
+      id: userId,
+      username: submission.value.username,
+      password: passwordHash,
     });
   } catch (err) {
     return c.json(
@@ -115,11 +118,7 @@ authRoute.post('/signup', async (c) => {
   }
   const session = await lucia.createSession(userId, {});
   const cookie = lucia.createSessionCookie(session.id);
-  setCookie(c, cookie.name, cookie.value);
-  if (submission.value.email) {
-    // TODO: needs to verify email, probably want to redirect them to a verify code page
-    return c.json(null, 200);
-  }
+  setCookie(c, cookie.name, cookie.value, cookie.attributes);
   return c.json(null, 200);
 });
 
@@ -128,11 +127,8 @@ authRoute.put('/profile', async (c) => {
   if (!isUserLoggedIn.success) {
     return c.json(null, 401);
   }
-  const data = await c.req.formData();
-  const username = data.get('username') as string;
-  const email = data.get('email') as string;
-  profileSchema.superRefine((data, ctx) => {
-    if (isUserLoggedIn.data.user.email && !data.email) {
+  const schema = profileSchema.superRefine((data, ctx) => {
+    if (isUserLoggedIn.data?.user.email && !data.email) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
         path: ['email'],
@@ -140,29 +136,91 @@ authRoute.put('/profile', async (c) => {
       });
     }
   });
-  await db.transaction(async (tx) => {
-    if (username !== isUserLoggedIn.data.user.username) {
-      await tx
-        .update(userTable)
-        .set({
-          username: username,
-        })
-        .where(eq(userTable.id, isUserLoggedIn.data.user.id));
+  const submission = parseWithZod(await c.req.formData(), { schema });
+  if (submission.status !== 'success') {
+    return c.json(submission.reply(), 400);
+  }
+  submission.value.email =
+    submission.value.email === '' ? null : submission.value.email;
+  const isUsernameBeingUpdated =
+    submission.value.username !== isUserLoggedIn.data.user.username;
+  const isEmailBeingUpdated =
+    typeof submission.value.email === 'string' &&
+    submission.value.email !== isUserLoggedIn.data.user.email;
+  try {
+    if (isUsernameBeingUpdated) {
+      const users = await db
+        .select({ username: userTable.username })
+        .from(userTable)
+        .where(eq(userTable.username, submission.value.username));
+      if (users.length) {
+        return c.json(
+          submission.reply({
+            fieldErrors: {
+              username: ['User already exists'],
+            },
+          }),
+          400,
+        );
+      }
     }
-    const code = generateRandomString(6, alphabet('0-9'));
-    if (email) {
-      await tx
-        .delete(emailVerificationTable)
-        .where(eq(emailVerificationTable.userId, isUserLoggedIn.data.user.id));
-      await tx.insert(emailVerificationTable).values({
-        id: createUlid(),
-        code: code,
-        userId: isUserLoggedIn.data.user.id,
-        email: email,
-        expiresAt: createDate(new TimeSpan(15, 'm')).toISOString(),
-      });
+    if (isEmailBeingUpdated) {
+      const users = await db
+        .select({ email: userTable.email })
+        .from(userTable)
+        .where(eq(userTable.email, submission.value.email as string));
+      if (users.length) {
+        return c.json(
+          submission.reply({
+            fieldErrors: {
+              email: ['Email is already being used'],
+            },
+          }),
+          400,
+        );
+      }
     }
-  });
+    await db.transaction(async (tx) => {
+      if (isUsernameBeingUpdated) {
+        await tx
+          .update(userTable)
+          .set({
+            username: submission.value.username,
+          })
+          .where(eq(userTable.id, isUserLoggedIn.data.user.id));
+      }
+      if (isEmailBeingUpdated) {
+        // TODO: send URL to email
+        const code = generateRandomString(6, alphabet('0-9'));
+        await tx
+          .delete(emailVerificationTable)
+          .where(
+            eq(emailVerificationTable.userId, isUserLoggedIn.data.user.id),
+          );
+        await tx.insert(emailVerificationTable).values({
+          id: createUlid(),
+          code: code,
+          userId: isUserLoggedIn.data.user.id,
+          email: submission.value.email as string,
+          expiresAt: createDate(new TimeSpan(15, 'm')).toISOString(),
+        });
+      }
+    });
+  } catch (err) {
+    return c.json(
+      submission.reply({
+        fieldErrors: {
+          username: ['Failed to update field, please try again'],
+          email: ['Failed to update field, please try again'],
+        },
+      }),
+      400,
+    );
+  }
+  if (isEmailBeingUpdated) {
+    return c.json({ message: 'email verification sent' }, 200);
+  }
+  return c.json(null, 200);
 });
 
 authRoute.post('/email-verification', async (c) => {
@@ -180,10 +238,7 @@ authRoute.post('/email-verification', async (c) => {
 
   const emailVerification = (
     await db
-      .select({
-        code: emailVerificationTable.code,
-        email: emailVerificationTable.email,
-      })
+      .select()
       .from(emailVerificationTable)
       .where(
         and(
@@ -192,7 +247,10 @@ authRoute.post('/email-verification', async (c) => {
         ),
       )
   )[0];
-  if (!emailVerification) {
+  if (
+    !emailVerification ||
+    !isWithinExpirationDate(new Date(emailVerification.expiresAt))
+  ) {
     // should tell them that code is invalid
     return c.json(
       submission.reply({
@@ -235,6 +293,169 @@ authRoute.post('/signout', async (c) => {
   }
   await lucia.invalidateSession(isUserLoggedIn.data.session.id);
   const blankSession = lucia.createBlankSessionCookie();
-  setCookie(c, blankSession.name, blankSession.value);
+  setCookie(c, blankSession.name, blankSession.value, blankSession.attributes);
   return c.redirect('/auth/signin');
+});
+
+authRoute.put('/password', async (c) => {
+  const isUserLoggedIn = await checkUserLogin(c);
+  if (!isUserLoggedIn.success) {
+    return c.json(null, 403);
+  }
+  const submission = parseWithZod(await c.req.formData(), {
+    schema: changePasswordSchema,
+  });
+  if (submission.status !== 'success') {
+    return c.json(submission.reply(), 400);
+  }
+  try {
+    const users = await db
+      .select()
+      .from(userTable)
+      .where(eq(userTable.id, isUserLoggedIn.data.user.id));
+    const passwordHash = await hashPassword(submission.value.currentPassword);
+    const user = users[0];
+    if (!user || user.password !== passwordHash) {
+      return c.json(
+        submission.reply({
+          fieldErrors: {
+            previousPassowrd: ['Invalid password'],
+          },
+        }),
+        400,
+      );
+    }
+    await db.update(userTable).set({
+      password: await hashPassword(submission.value.newPassword),
+    });
+    await lucia.invalidateUserSessions(isUserLoggedIn.data.user.id);
+    const session = await lucia.createSession(isUserLoggedIn.data.user.id, {});
+    const blankCookie = lucia.createSessionCookie(session.id);
+    setCookie(c, blankCookie.name, blankCookie.value, blankCookie.attributes);
+    return c.json(null, 200);
+  } catch (err) {
+    return c.json(
+      submission.reply({
+        fieldErrors: {
+          previousPassowrd: ['Invalid password'],
+        },
+      }),
+      400,
+    );
+  }
+});
+
+authRoute.delete('/session', async (c) => {
+  const isUserLoggedIn = await checkUserLogin(c);
+  if (!isUserLoggedIn.success) {
+    return c.json(null, 403);
+  }
+  await lucia.invalidateUserSessions(isUserLoggedIn.data.user.id);
+  const session = await lucia.createSession(isUserLoggedIn.data.user.id, {});
+  const blankCookie = lucia.createSessionCookie(session.id);
+  setCookie(c, blankCookie.name, blankCookie.value, blankCookie.attributes);
+  return c.json(null, 200);
+});
+
+authRoute.post('/reset-password/email', async (c) => {
+  const isUserLoggedIn = await checkUserLogin(c);
+  if (isUserLoggedIn.success) {
+    return c.json(null, 403);
+  }
+  const submission = parseWithZod(await c.req.formData(), {
+    schema: resetTokenSchema,
+  });
+  if (submission.status !== 'success') {
+    return c.json(submission.reply(), 400);
+  }
+  try {
+    const users = await db
+      .select({ id: userTable.id })
+      .from(userTable)
+      .where(eq(userTable.email, submission.value.email));
+    const user = users[0];
+    if (!user) {
+      return c.json(null, 200);
+    }
+
+    await db.delete(resetTokenTable).where(eq(resetTokenTable.userId, user.id));
+    const tokenId = generateIdFromEntropySize(25); // 40 character
+    const tokenHash = encodeHex(
+      await sha256(new TextEncoder().encode(tokenId)),
+    );
+    await db.insert(resetTokenTable).values({
+      id: createUlid(),
+      token: tokenHash,
+      userId: user.id,
+      expiresAt: createDate(new TimeSpan(2, 'h')).toISOString(),
+    });
+    const origin = c.req.header('origin');
+    const url = `${origin}/${tokenId}`;
+    console.log(url);
+    // TODO: send URL to email
+    return c.json(null, 200);
+  } catch (err) {
+    return c.json(
+      submission.reply({
+        fieldErrors: {
+          email: ['Something went wrong, please try again'],
+        },
+      }),
+    );
+  }
+});
+
+authRoute.get('/reset-password/:token', async (c) => {
+  const token = c.req.param('token');
+  const tokenHash = encodeHex(await sha256(new TextEncoder().encode(token)));
+  const records = await db
+    .select()
+    .from(resetTokenTable)
+    .where(eq(resetTokenTable.token, tokenHash));
+  const record = records[0];
+  if (!record || !isWithinExpirationDate(new Date(record.expiresAt))) {
+    return c.json(null, 400);
+  }
+  return c.json(null, 200);
+});
+
+authRoute.post('/reset-password/token', async (c) => {
+  const isUserLoggedIn = await checkUserLogin(c);
+  if (isUserLoggedIn.success) {
+    return c.json(null, 403);
+  }
+  const submission = parseWithZod(await c.req.formData(), {
+    schema: validateResetTokenSchema,
+  });
+  if (submission.status !== 'success') {
+    return c.json(submission.reply(), 400);
+  }
+  const tokenHash = encodeHex(
+    await sha256(new TextEncoder().encode(submission.value.token)),
+  );
+  const records = await db
+    .select()
+    .from(resetTokenTable)
+    .where(eq(resetTokenTable.token, tokenHash));
+  const record = records[0];
+  if (!record || !isWithinExpirationDate(new Date(record.expiresAt))) {
+    return c.json(null, 400);
+  }
+  await lucia.invalidateUserSessions(record.userId);
+  const passwordHash = await hashPassword(submission.value.password);
+  await db
+    .update(userTable)
+    .set({
+      password: passwordHash,
+    })
+    .where(eq(userTable.id, record.userId));
+  const session = await lucia.createSession(record.userId, {});
+  const sessionCookie = lucia.createSessionCookie(session.id);
+  setCookie(
+    c,
+    sessionCookie.value,
+    sessionCookie.name,
+    sessionCookie.attributes,
+  );
+  return c.json(null, 200);
 });

@@ -33,8 +33,8 @@ export async function hashPassword(password: string) {
 }
 
 export async function comparePasswords(password1: string, password2: string) {
-  const hashedPassword = await hashPassword(password2);
-  return hashedPassword === password1;
+  const passworddHash = await hashPassword(password2);
+  return passworddHash === password1;
 }
 
 export function createUlid() {

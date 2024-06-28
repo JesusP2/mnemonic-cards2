@@ -39,7 +39,12 @@ app.get('/api/profile', async (c) => {
       });
     }
     const blankSession = lucia.createBlankSessionCookie();
-    setCookie(c, blankSession.name, blankSession.value);
+    setCookie(
+      c,
+      blankSession.name,
+      blankSession.value,
+      blankSession.attributes,
+    );
   }
   return c.json(null);
 });

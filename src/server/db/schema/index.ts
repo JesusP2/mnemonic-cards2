@@ -54,5 +54,12 @@ export const emailVerificationTable = sqliteTable('email_verification', {
   code: text('code').notNull(),
   userId: text('user_id').notNull().unique(),
   email: text('email').notNull(),
-  expiresAt: text('expires_at'),
+  expiresAt: text('expires_at').notNull(),
+});
+
+export const resetTokenTable = sqliteTable('reset_token', {
+  id: text('id').notNull().primaryKey(),
+  token: text('token').notNull(),
+  userId: text('user_id').notNull().unique(),
+  expiresAt: text('expires_at').notNull(),
 });

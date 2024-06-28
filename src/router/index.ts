@@ -84,11 +84,7 @@ const routeTree = rootRoute.addChildren([
     homeRoute,
     settingsRoute.addChildren([profileRoute]),
   ]),
-  authLayout.addChildren([
-    signinRoute,
-    signupRoute,
-   forgotPasswordRoute
-  ]),
+  authLayout.addChildren([signinRoute, signupRoute, forgotPasswordRoute]),
 ]);
 export const router = createRouter({ routeTree, defaultPreload: 'intent' });
 

@@ -330,7 +330,7 @@ authRoute.put('/password', async (c) => {
       return c.json(
         submission.reply({
           fieldErrors: {
-            previousPassowrd: ['Invalid password'],
+            currentPassword: ['Invalid password'],
           },
         }),
         400,
@@ -347,7 +347,7 @@ authRoute.put('/password', async (c) => {
     return c.json(
       submission.reply({
         fieldErrors: {
-          previousPassowrd: ['Invalid password'],
+          currentPassword: ['Invalid password'],
         },
       }),
       400,

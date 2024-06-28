@@ -17,6 +17,7 @@ import { Label } from '../components/ui/label';
 import { TypographyH4 } from '../components/ui/typography';
 import { profileQueryOptions } from '../lib/queries';
 import { profileSchema } from '../lib/schemas';
+import { queryClient } from '../lib/query-client';
 
 export default function Profile() {
   const query = useQuery(profileQueryOptions);
@@ -124,7 +125,19 @@ export default function Profile() {
             </DialogDescription>
           </DialogHeader>
           <div className="pt-6 grid place-items-center">
-            <OTPForm onSuccess={() => openEmailVerificationDialog(false)} />
+            <OTPForm
+              onSuccess={async () => {
+                openEmailVerificationDialog(false);
+
+                await queryClient.setQueryData(
+                  ['profile'],
+                  (profile: Record<string, unknown>) => ({
+                    ...profile,
+                    email: fields.email.value,
+                  }),
+                );
+              }}
+            />
           </div>
         </DialogContent>
       </Dialog>

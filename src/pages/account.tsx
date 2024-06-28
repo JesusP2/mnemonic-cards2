@@ -6,9 +6,20 @@ import { parseWithZod } from '@conform-to/zod';
 import { changePasswordSchema } from '../lib/schemas';
 import { Label } from '../components/ui/label';
 import { Input } from '../components/ui/input';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from '../components/ui/dialog';
+import { Link } from '@tanstack/react-router';
+import { unselectedCss } from '../lib/constants';
+import { cn } from '../components/ui/utils';
+import { queryClient } from '../lib/query-client';
 
 export default function Account() {
   const [lastResult, setLastResult] = useState(null);
+  const [isModalOpened, openModal] = useState(false);
   const [form, fields] = useForm({
     lastResult,
     shouldValidate: 'onBlur',
@@ -29,7 +40,8 @@ export default function Account() {
         setLastResult(json);
         return;
       }
-      window.location.href = '/auth/signin';
+      await queryClient.invalidateQueries()
+      openModal(true);
     },
     defaultValue: {
       currentPassword: '',
@@ -91,6 +103,20 @@ export default function Account() {
           <Button>Close all sessions</Button>
         </form>
       </section>
+      <Dialog open={isModalOpened}>
+        <DialogContent className="max-w-sm">
+          <DialogHeader className="mt-4">
+            <DialogTitle className="text-2xl text-center">
+              Pasword updated succesfully
+            </DialogTitle>
+          </DialogHeader>
+          <p className="text-muted-foreground text-sm text-center">
+            Your password has been updated. Please log in with your new
+            password.
+          </p>
+          <Link className={cn(unselectedCss, 'justify-center')} to="/auth/signin">Go back to login page</Link>
+        </DialogContent>
+      </Dialog>
     </>
   );
 }

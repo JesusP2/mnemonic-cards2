@@ -14,8 +14,10 @@ import { parseWithZod } from '@conform-to/zod';
 import { validateResetTokenSchema } from '../../lib/schemas';
 import { useNavigate, useParams } from '@tanstack/react-router';
 import { Button } from '../../components/ui/button';
+import { queryClient } from '../../lib/query-client';
 
 export default function ResetPasswordToken() {
+  const navigate = useNavigate({ from: '/auth/reset-password/$token' });
   const params = useParams({ from: '/auth/reset-password/$token' });
   const [viewPass, setViewPass] = useState(false);
   const [lastResult, setLastResult] = useState(null);
@@ -40,7 +42,8 @@ export default function ResetPasswordToken() {
         setLastResult(json);
         return;
       }
-      window.location.href = '/home'
+      await queryClient.invalidateQueries();
+      navigate({ to: '/home' })
     },
     defaultValue: {
       password: '',

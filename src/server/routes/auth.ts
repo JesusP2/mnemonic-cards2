@@ -297,6 +297,17 @@ authRoute.post('/signout', async (c) => {
   return c.redirect('/auth/signin');
 });
 
+authRoute.post('/signout-global', async (c) => {
+  const isUserLoggedIn = await checkUserLogin(c);
+  if (!isUserLoggedIn.success) {
+    return c.redirect('/auth/signin');
+  }
+  await lucia.invalidateUserSessions(isUserLoggedIn.data.user.id);
+  const blankSession = lucia.createBlankSessionCookie();
+  setCookie(c, blankSession.name, blankSession.value, blankSession.attributes);
+  return c.redirect('/auth/signin')
+});
+
 authRoute.put('/password', async (c) => {
   const isUserLoggedIn = await checkUserLogin(c);
   if (!isUserLoggedIn.success) {
@@ -343,18 +354,6 @@ authRoute.put('/password', async (c) => {
       400,
     );
   }
-});
-
-authRoute.delete('/session', async (c) => {
-  const isUserLoggedIn = await checkUserLogin(c);
-  if (!isUserLoggedIn.success) {
-    return c.json(null, 403);
-  }
-  await lucia.invalidateUserSessions(isUserLoggedIn.data.user.id);
-  const session = await lucia.createSession(isUserLoggedIn.data.user.id, {});
-  const blankCookie = lucia.createSessionCookie(session.id);
-  setCookie(c, blankCookie.name, blankCookie.value, blankCookie.attributes);
-  return c.json(null, 200);
 });
 
 authRoute.post('/reset-password/email', async (c) => {

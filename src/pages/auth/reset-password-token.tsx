@@ -16,7 +16,7 @@ import { useNavigate, useParams } from '@tanstack/react-router';
 import { Button } from '../../components/ui/button';
 
 export default function ResetPasswordToken() {
-  const navigate = useNavigate({ from: '/auth/reset-password/$token' })
+  const navigate = useNavigate({ from: '/auth/reset-password/$token' });
   const params = useParams({ from: '/auth/reset-password/$token' });
   const [viewPass, setViewPass] = useState(false);
   const [lastResult, setLastResult] = useState(null);
@@ -25,12 +25,13 @@ export default function ResetPasswordToken() {
     shouldValidate: 'onBlur',
     shouldRevalidate: 'onBlur',
     onValidate: ({ formData }) => {
-      const yo = parseWithZod(formData, { schema: validateResetTokenSchema });
-      console.log(yo)
-      return yo
+      return parseWithZod(formData, {
+        schema: validateResetTokenSchema.omit({ token: true }),
+      });
     },
     onSubmit: async (e, context) => {
       e.preventDefault();
+      context.formData.set('token', params.token);
       const res = await fetch('/api/auth/reset-password/token', {
         method: 'POST',
         body: context.formData,
@@ -40,10 +41,9 @@ export default function ResetPasswordToken() {
         setLastResult(json);
         return;
       }
-      navigate({ to: '/home' })
+      window.location.href = '/home'
     },
     defaultValue: {
-      token: params.token,
       password: '',
     },
   });
@@ -58,7 +58,6 @@ export default function ResetPasswordToken() {
         </CardHeader>
         <CardContent className="pt-6 grid place-items-center">
           <form id={form.id} onSubmit={form.onSubmit}>
-            <input name="token" hidden defaultValue={params.token} />
             <div className="grid gap-2">
               <div className="flex items-center gap-x-4">
                 <Label htmlFor="password">New password</Label>

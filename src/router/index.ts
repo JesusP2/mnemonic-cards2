@@ -40,6 +40,12 @@ const profileRoute = createRoute({
   component: lazyRouteComponent(() => import('../pages/profile')),
 });
 
+const accountRoute = createRoute({
+  getParentRoute: () => settingsRoute,
+  path: 'account',
+  component: lazyRouteComponent(() => import('../pages/account')),
+});
+
 const authLayout = createRoute({
   getParentRoute: () => rootRoute,
   path: 'auth',
@@ -82,7 +88,7 @@ export const resetPasswordRoute = createRoute({
 const routeTree = rootRoute.addChildren([
   mainLayout.addChildren([
     homeRoute,
-    settingsRoute.addChildren([profileRoute]),
+    settingsRoute.addChildren([profileRoute, accountRoute]),
   ]),
   authLayout.addChildren([signinRoute, signupRoute, forgotPasswordRoute, resetPasswordRoute]),
 ]);

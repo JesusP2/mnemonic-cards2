@@ -70,21 +70,21 @@ export const forgotPasswordRoute = createRoute({
   component: lazyRouteComponent(() => import('../pages/auth/forgot-password')),
 });
 
-export const emailVerificationRoute = createRoute({
-  getParentRoute: () => rootRoute,
-  path: 'email-verification',
-  component: lazyRouteComponent(
-    () => import('../pages/auth/email-verification'),
-  ),
+export const resetPasswordRoute = createRoute({
+  getParentRoute: () => authLayout,
+  path: 'reset-password/$token',
+  beforeLoad: async (idk) => {
+    console.log(idk.params.token)
+  },
+  component: lazyRouteComponent(() => import('../pages/auth/reset-password-token')),
 });
 
 const routeTree = rootRoute.addChildren([
-  emailVerificationRoute,
   mainLayout.addChildren([
     homeRoute,
     settingsRoute.addChildren([profileRoute]),
   ]),
-  authLayout.addChildren([signinRoute, signupRoute, forgotPasswordRoute]),
+  authLayout.addChildren([signinRoute, signupRoute, forgotPasswordRoute, resetPasswordRoute]),
 ]);
 export const router = createRouter({ routeTree, defaultPreload: 'intent' });
 

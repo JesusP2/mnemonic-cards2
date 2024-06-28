@@ -390,7 +390,7 @@ authRoute.post('/reset-password/email', async (c) => {
       expiresAt: createDate(new TimeSpan(2, 'h')).toISOString(),
     });
     const origin = c.req.header('origin');
-    const url = `${origin}/${tokenId}`;
+    const url = `${origin}/auth/reset-password/${tokenId}`;
     console.log(url);
     // TODO: send URL to email
     return c.json(null, 200);
@@ -403,20 +403,6 @@ authRoute.post('/reset-password/email', async (c) => {
       }),
     );
   }
-});
-
-authRoute.get('/reset-password/:token', async (c) => {
-  const token = c.req.param('token');
-  const tokenHash = encodeHex(await sha256(new TextEncoder().encode(token)));
-  const records = await db
-    .select()
-    .from(resetTokenTable)
-    .where(eq(resetTokenTable.token, tokenHash));
-  const record = records[0];
-  if (!record || !isWithinExpirationDate(new Date(record.expiresAt))) {
-    return c.json(null, 400);
-  }
-  return c.json(null, 200);
 });
 
 authRoute.post('/reset-password/token', async (c) => {
@@ -439,7 +425,11 @@ authRoute.post('/reset-password/token', async (c) => {
     .where(eq(resetTokenTable.token, tokenHash));
   const record = records[0];
   if (!record || !isWithinExpirationDate(new Date(record.expiresAt))) {
-    return c.json(null, 400);
+    return c.json(submission.reply({
+      fieldErrors: {
+        password: ['Token expired']
+      }
+    }), 400);
   }
   await lucia.invalidateUserSessions(record.userId);
   const passwordHash = await hashPassword(submission.value.password);
@@ -453,8 +443,8 @@ authRoute.post('/reset-password/token', async (c) => {
   const sessionCookie = lucia.createSessionCookie(session.id);
   setCookie(
     c,
-    sessionCookie.value,
     sessionCookie.name,
+    sessionCookie.value,
     sessionCookie.attributes,
   );
   return c.json(null, 200);

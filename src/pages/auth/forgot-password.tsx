@@ -66,16 +66,19 @@ export default function ForgotPassword() {
       </CardHeader>
       <CardContent>
         <form id={form.id} onSubmit={form.onSubmit}>
-          <Label htmlFor="email" className="font-medium">
-            Email
-          </Label>
-          <Input
-            id="email"
-            name="email"
-            type="email"
-            placeholder="example@app.com"
-          />
-          <span className="text-sm text-red-500">{fields.email.errors}</span>
+          <div className="grid gap-2 max-w-3xl mt-4">
+            <Label htmlFor={fields.email.id} className="font-medium">
+              Email
+            </Label>
+            <Input
+              id={fields.email.id}
+              name={fields.email.name}
+              defaultValue={fields.email.value}
+              type="email"
+              placeholder="example@app.com"
+            />
+            <span className="text-sm text-red-500">{fields.email.errors}</span>
+          </div>
           <Button className="w-full mt-8">Send email</Button>
         </form>
       </CardContent>

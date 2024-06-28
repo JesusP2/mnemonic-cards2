@@ -28,6 +28,12 @@ export default function Settings() {
             >
               Account
             </Link>
+            <Link
+              className={unselectedCss}
+              to="/home"
+            >
+              Go back
+            </Link>
           </nav>
         </aside>
         <div className="w-full">

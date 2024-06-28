@@ -340,8 +340,7 @@ authRoute.put('/password', async (c) => {
       password: await hashPassword(submission.value.newPassword),
     });
     await lucia.invalidateUserSessions(isUserLoggedIn.data.user.id);
-    const session = await lucia.createSession(isUserLoggedIn.data.user.id, {});
-    const blankCookie = lucia.createSessionCookie(session.id);
+    const blankCookie = lucia.createBlankSessionCookie();
     setCookie(c, blankCookie.name, blankCookie.value, blankCookie.attributes);
     return c.json(null, 200);
   } catch (err) {

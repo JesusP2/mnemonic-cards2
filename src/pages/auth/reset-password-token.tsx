@@ -16,7 +16,6 @@ import { useNavigate, useParams } from '@tanstack/react-router';
 import { Button } from '../../components/ui/button';
 
 export default function ResetPasswordToken() {
-  const navigate = useNavigate({ from: '/auth/reset-password/$token' });
   const params = useParams({ from: '/auth/reset-password/$token' });
   const [viewPass, setViewPass] = useState(false);
   const [lastResult, setLastResult] = useState(null);

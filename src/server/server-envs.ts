@@ -12,5 +12,7 @@ export const envs = z
     R2_ENDPOINT: z.string().min(1),
     R2_ACCESS_KEY_ID: z.string().min(1),
     R2_SECRET_ACCESS_KEY: z.string().min(1),
+    RESEND_API_KEY: z.string().min(1),
+    EMAIL_FROM: z.string().min(1),
   })
   .parse(process.env);

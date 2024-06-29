@@ -3,11 +3,9 @@ import { serve } from '@hono/node-server';
 import { serveStatic } from '@hono/node-server/serve-static';
 import { Hono } from 'hono';
 import 'dotenv/config';
-import { getCookie, setCookie } from 'hono/cookie';
 import type { Session, User } from 'lucia';
-import { lucia } from './lucia';
 import { authRoute } from './routes/auth';
-import { checkUserLogin } from './utils';
+import { checkUserLogin } from './utils/check-user';
 
 const isProd = process.env.NODE_ENV === 'production';
 let html = await readFile(isProd ? 'build/index.html' : 'index.html', 'utf8');
@@ -34,7 +32,6 @@ declare module 'hono' {
   }
 }
 const app = new Hono();
-app.use;
 app.use(async (c, next) => {
   const isUserLoggedIn = await checkUserLogin(c);
   if (isUserLoggedIn.success) {
@@ -46,6 +43,7 @@ app.use(async (c, next) => {
   }
   return next();
 });
+
 app.route('/api/auth', authRoute);
 app.get('/api/profile', async (c) => {
   const user = c.get('user');

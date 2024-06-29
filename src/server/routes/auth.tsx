@@ -25,6 +25,8 @@ import { userModel } from '../data-access/users';
 import { db } from '../db/pool';
 import { createUlid, hashPassword, lucia } from '../lucia';
 import { resetTokenModel } from '../data-access/reset-token';
+import { sendEmail } from '../utils/email';
+import { VerifyEmail } from '../emails/verify-email';
 
 export const authRoute = new Hono();
 authRoute.post('/signin', async (c) => {
@@ -172,6 +174,11 @@ authRoute.put('/profile', async (c) => {
         // TODO: send URL to email
         const code = generateRandomString(6, alphabet('0-9'));
         await emailVerificationModel.deleteAllByUserId(user.id, tx);
+        console.log(code)
+        console.log('hit x1')
+        console.log(submission.value.email)
+        await sendEmail(submission.value.email as string, 'Verify email', <VerifyEmail code={code} />)
+        console.log('hit x2')
         await emailVerificationModel.create(
           {
             id: createUlid(),
@@ -185,6 +192,7 @@ authRoute.put('/profile', async (c) => {
       }
     });
   } catch (err) {
+    console.error(err)
     return c.json(
       submission.reply({
         fieldErrors: {
@@ -334,10 +342,10 @@ authRoute.post('/reset-password/email', async (c) => {
       userId: user.id,
       expiresAt: createDate(new TimeSpan(2, 'h')).toISOString(),
     })
-    const origin = c.req.header('origin');
+    const origin = c.req.header('origin') as string;
+    // sendEmail(submission.value.email, 'Reset password')
     const url = `${origin}/auth/reset-password/${tokenId}`;
     console.log(url);
-    // TODO: send URL to email
     return c.json(null, 200);
   } catch (err) {
     return c.json(

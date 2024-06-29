@@ -7,7 +7,9 @@ export default function Layout() {
     <>
       <nav className="h-12 w-full">
         <div className="flex items-center justify-between gap-x-4 max-w-7xl h-12 mx-auto px-6">
-          <Link to="/home"><img src="/vite.svg" alt="icon" /></Link>
+          <Link to="/home">
+            <img src="/vite.svg" alt="icon" />
+          </Link>
           <div className="flex items-center gap-6">
             <ModeToggle />
             <UserDropdown

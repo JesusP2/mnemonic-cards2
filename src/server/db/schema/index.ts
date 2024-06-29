@@ -5,6 +5,8 @@ export const userTable = sqliteTable('user', {
   username: text('username').notNull().unique(),
   email: text('email').unique(),
   password: text('password').notNull(),
+  createdAt: text('created_at').$defaultFn(() => new Date().toISOString()),
+  updatedAt: text('updated_at').$defaultFn(() => new Date().toISOString()),
 });
 
 export const sessionTable = sqliteTable('session', {

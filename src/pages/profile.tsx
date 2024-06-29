@@ -16,8 +16,8 @@ import { Input } from '../components/ui/input';
 import { Label } from '../components/ui/label';
 import { TypographyH4 } from '../components/ui/typography';
 import { profileQueryOptions } from '../lib/queries';
-import { profileSchema } from '../lib/schemas';
 import { queryClient } from '../lib/query-client';
+import { profileSchema } from '../lib/schemas';
 
 export default function Profile() {
   const query = useQuery(profileQueryOptions);

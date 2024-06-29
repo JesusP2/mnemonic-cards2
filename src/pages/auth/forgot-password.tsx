@@ -1,4 +1,8 @@
+import { useForm } from '@conform-to/react';
+import { parseWithZod } from '@conform-to/zod';
+import { CircleCheckBig } from 'lucide-react';
 import { useState } from 'react';
+import { Button } from '../../components/ui/button';
 import {
   Card,
   CardContent,
@@ -6,13 +10,9 @@ import {
   CardHeader,
   CardTitle,
 } from '../../components/ui/card';
-import { useForm } from '@conform-to/react';
-import { parseWithZod } from '@conform-to/zod';
-import { resetTokenSchema } from '../../lib/schemas';
 import { Input } from '../../components/ui/input';
-import { Button } from '../../components/ui/button';
 import { Label } from '../../components/ui/label';
-import { CircleCheckBig } from 'lucide-react';
+import { resetTokenSchema } from '../../lib/schemas';
 
 export default function ForgotPassword() {
   const [isEmailSent, toggleEmailState] = useState(false);

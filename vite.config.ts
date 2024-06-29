@@ -12,7 +12,7 @@ export default defineConfig({
   plugins: [
     react(),
     devServer({
-      entry: './src/server/index.ts',
+      entry: './src/server/server.ts',
       exclude: [
         // We need to override this option since the default setting doesn't fit
         /.*\.tsx?($|\?)/,

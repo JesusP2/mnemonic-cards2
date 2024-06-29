@@ -1,21 +1,21 @@
-import { useState } from 'react';
-import { Button } from '../components/ui/button';
-import { TypographyH4 } from '../components/ui/typography';
 import { useForm } from '@conform-to/react';
 import { parseWithZod } from '@conform-to/zod';
-import { changePasswordSchema } from '../lib/schemas';
-import { Label } from '../components/ui/label';
-import { Input } from '../components/ui/input';
+import { Link } from '@tanstack/react-router';
+import { useState } from 'react';
+import { Button } from '../components/ui/button';
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
 } from '../components/ui/dialog';
-import { Link } from '@tanstack/react-router';
-import { unselectedCss } from '../lib/constants';
+import { Input } from '../components/ui/input';
+import { Label } from '../components/ui/label';
+import { TypographyH4 } from '../components/ui/typography';
 import { cn } from '../components/ui/utils';
+import { unselectedCss } from '../lib/constants';
 import { queryClient } from '../lib/query-client';
+import { changePasswordSchema } from '../lib/schemas';
 
 export default function Account() {
   const [lastResult, setLastResult] = useState(null);
@@ -40,7 +40,7 @@ export default function Account() {
         setLastResult(json);
         return;
       }
-      await queryClient.invalidateQueries()
+      await queryClient.invalidateQueries();
       openModal(true);
     },
     defaultValue: {
@@ -114,7 +114,12 @@ export default function Account() {
             Your password has been updated. Please log in with your new
             password.
           </p>
-          <Link className={cn(unselectedCss, 'justify-center')} to="/auth/signin">Go back to login page</Link>
+          <Link
+            className={cn(unselectedCss, 'justify-center')}
+            to="/auth/signin"
+          >
+            Go back to login page
+          </Link>
         </DialogContent>
       </Dialog>
     </>

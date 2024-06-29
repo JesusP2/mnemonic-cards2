@@ -1,4 +1,9 @@
+import { useForm } from '@conform-to/react';
+import { parseWithZod } from '@conform-to/zod';
+import { useNavigate, useParams } from '@tanstack/react-router';
 import { useState } from 'react';
+import { LuEye, LuEyeOff } from 'react-icons/lu';
+import { Button } from '../../components/ui/button';
 import {
   Card,
   CardContent,
@@ -6,15 +11,10 @@ import {
   CardHeader,
   CardTitle,
 } from '../../components/ui/card';
-import { Label } from '../../components/ui/label';
 import { Input } from '../../components/ui/input';
-import { LuEye, LuEyeOff } from 'react-icons/lu';
-import { useForm } from '@conform-to/react';
-import { parseWithZod } from '@conform-to/zod';
-import { validateResetTokenSchema } from '../../lib/schemas';
-import { useNavigate, useParams } from '@tanstack/react-router';
-import { Button } from '../../components/ui/button';
+import { Label } from '../../components/ui/label';
 import { queryClient } from '../../lib/query-client';
+import { validateResetTokenSchema } from '../../lib/schemas';
 
 export default function ResetPasswordToken() {
   const navigate = useNavigate({ from: '/auth/reset-password/$token' });
@@ -43,7 +43,7 @@ export default function ResetPasswordToken() {
         return;
       }
       await queryClient.invalidateQueries();
-      navigate({ to: '/home' })
+      navigate({ to: '/home' });
     },
     defaultValue: {
       password: '',

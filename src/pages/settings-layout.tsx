@@ -3,7 +3,7 @@ import { TypographyH3 } from '../components/ui/typography';
 import { selectedCss, unselectedCss } from '../lib/constants';
 
 export default function Settings() {
-  const location = useLocation()
+  const location = useLocation();
   return (
     <>
       <TypographyH3>Settings</TypographyH3>
@@ -16,21 +16,26 @@ export default function Settings() {
         <aside className="-mx-4 md:w-1/5">
           <nav className="flex space-x-2 md:flex-col md:space-x-0 md:space-y-1">
             <Link
-              className={location.pathname === "/settings/profile" ? selectedCss : unselectedCss}
+              className={
+                location.pathname === '/settings/profile'
+                  ? selectedCss
+                  : unselectedCss
+              }
               to="/settings/profile"
             >
               Profile
             </Link>
             <Link
-              className={location.pathname === "/settings/account" ? selectedCss : unselectedCss}
+              className={
+                location.pathname === '/settings/account'
+                  ? selectedCss
+                  : unselectedCss
+              }
               to="/settings/account"
             >
               Account
             </Link>
-            <Link
-              className={unselectedCss}
-              to="/home"
-            >
+            <Link className={unselectedCss} to="/home">
               Go back
             </Link>
           </nav>

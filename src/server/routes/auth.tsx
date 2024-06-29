@@ -27,6 +27,7 @@ import { createUlid, hashPassword, lucia } from '../lucia';
 import { resetTokenModel } from '../data-access/reset-token';
 import { sendEmail } from '../utils/email';
 import { VerifyEmail } from '../emails/verify-email';
+import { ResetPasswordEmail } from '../emails/reset-password';
 
 export const authRoute = new Hono();
 authRoute.post('/signin', async (c) => {
@@ -174,11 +175,7 @@ authRoute.put('/profile', async (c) => {
         // TODO: send URL to email
         const code = generateRandomString(6, alphabet('0-9'));
         await emailVerificationModel.deleteAllByUserId(user.id, tx);
-        console.log(code)
-        console.log('hit x1')
-        console.log(submission.value.email)
         await sendEmail(submission.value.email as string, 'Verify email', <VerifyEmail code={code} />)
-        console.log('hit x2')
         await emailVerificationModel.create(
           {
             id: createUlid(),
@@ -343,7 +340,7 @@ authRoute.post('/reset-password/email', async (c) => {
       expiresAt: createDate(new TimeSpan(2, 'h')).toISOString(),
     })
     const origin = c.req.header('origin') as string;
-    // sendEmail(submission.value.email, 'Reset password')
+    await sendEmail(submission.value.email, 'Reset password', <ResetPasswordEmail origin={origin} tokenId={tokenId} />)
     const url = `${origin}/auth/reset-password/${tokenId}`;
     console.log(url);
     return c.json(null, 200);

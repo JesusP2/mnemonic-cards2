@@ -21,9 +21,6 @@ export async function sendEmail(
     }),
   });
 
-  console.log(res.ok)
-  console.log(res.statusText)
-  console.log(await res.json())
   if (res.ok) {
     const data = await res.json();
     return Response.json(data);

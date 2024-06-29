@@ -21,7 +21,7 @@ export function VerifyEmail({ code }: { code: string; }) {
             <Container className="border border-solid border-[#eaeaea] rounded my-[40px] mx-auto p-[20px] w-[465px]">
               <Section className="text-center mt-[32px] mb-[32px]">
                 <Text className="text-black font-medium text-[14px] leading-[24px] mb-8">
-                  Verification code: ${code}
+                  Verification code: {code}
                 </Text>
               </Section>
 

@@ -73,7 +73,6 @@ export default function ForgotPassword() {
             <Input
               id={fields.email.id}
               name={fields.email.name}
-              defaultValue={fields.email.value}
               type="email"
               placeholder="example@app.com"
             />

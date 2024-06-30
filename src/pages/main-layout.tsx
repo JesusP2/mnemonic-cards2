@@ -17,7 +17,7 @@ export default function Layout() {
             <ModeToggle />
             {profile.isLoading || !profile.data ? null : (
             <UserDropdown
-              user={{ username: profile.data.username  }}
+              user={{ username: profile.data.username, email: profile.data.email  }}
             />
             )}
           </div>

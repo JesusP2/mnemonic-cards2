@@ -1,5 +1,5 @@
 export type Profile = {
-  email?: string;
+  email: string | null;
   username: string;
   isOauth: boolean;
 };

@@ -11,10 +11,11 @@ import {
   DropdownMenuShortcut,
   DropdownMenuTrigger,
 } from './ui/dropdown-menu';
+import { Settings, LogOut } from 'lucide-react';
 
 export function UserDropdown({
   user,
-}: { user: { username: string; } }) {
+}: { user: { username: string; email: string | null } }) {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
@@ -32,16 +33,19 @@ export function UserDropdown({
       </DropdownMenuTrigger>
       <DropdownMenuContent>
         <DropdownMenuLabel>{user.username}</DropdownMenuLabel>
+        <p className="text-muted-foreground text-xs px-2">{user.email}</p>
         <DropdownMenuSeparator />
         <Link to="/settings/profile">
-          <DropdownMenuItem>
-            Profile
+          <DropdownMenuItem className="flex gap-x-2">
+            <Settings size={15} />
+            Settings
             <DropdownMenuShortcut>⌘S</DropdownMenuShortcut>
           </DropdownMenuItem>
         </Link>
         <form action="/api/auth/signout" method="post">
           <DropdownMenuItem asChild>
-            <button className="w-full">
+            <button className="w-full flex gap-x-2">
+              <LogOut size={15} />
               Log out
               <DropdownMenuShortcut>⇧⌘Q</DropdownMenuShortcut>
             </button>

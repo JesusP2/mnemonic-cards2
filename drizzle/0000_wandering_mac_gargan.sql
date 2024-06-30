@@ -26,6 +26,14 @@ CREATE TABLE `email_verification` (
 	`expires_at` text NOT NULL
 );
 --> statement-breakpoint
+CREATE TABLE `oauth_account` (
+	`id` text NOT NULL,
+	`provider_id` text NOT NULL,
+	`provider_user_id` text NOT NULL,
+	`created_at` text,
+	`updated_at` text
+);
+--> statement-breakpoint
 CREATE TABLE `reset_token` (
 	`id` text PRIMARY KEY NOT NULL,
 	`token` text NOT NULL,
@@ -43,8 +51,12 @@ CREATE TABLE `session` (
 CREATE TABLE `user` (
 	`id` text PRIMARY KEY NOT NULL,
 	`username` text NOT NULL,
+	`avatar` text,
 	`email` text,
-	`password` text NOT NULL
+	`conflicts` text,
+	`password` text,
+	`created_at` text,
+	`updated_at` text
 );
 --> statement-breakpoint
 CREATE TABLE `user_deck` (
@@ -55,7 +67,7 @@ CREATE TABLE `user_deck` (
 	`created_at` text,
 	`updated_at` text,
 	FOREIGN KEY (`deck_id`) REFERENCES `deck`(`id`) ON UPDATE no action ON DELETE cascade,
-	FOREIGN KEY (`user_id`) REFERENCES `user`(`id`) ON UPDATE no action ON DELETE cascade
+	FOREIGN KEY (`user_id`) REFERENCES `user`(`id`) ON UPDATE no action ON DELETE set null
 );
 --> statement-breakpoint
 CREATE UNIQUE INDEX `email_verification_user_id_unique` ON `email_verification` (`user_id`);--> statement-breakpoint

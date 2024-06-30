@@ -10,9 +10,12 @@ import {
   Section,
   Tailwind,
   Text,
-} from "@react-email/components";
+} from '@react-email/components';
 
-export function MagicLinkEmail({ token, origin }: { token: string, origin: string; }) {
+export function MagicLinkEmail({
+  token,
+  origin,
+}: { token: string; origin: string }) {
   const previewText = `You've been invited to a group!`;
   return (
     <Html>

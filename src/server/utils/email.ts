@@ -1,6 +1,6 @@
-import type { ReactNode } from "@tanstack/react-router";
+import type { ReactNode } from '@tanstack/react-router';
 import { renderToString } from 'react-dom/server';
-import { envs } from "../server-envs";
+import { envs } from '../server-envs';
 
 export async function sendEmail(
   email: string,

@@ -1,7 +1,7 @@
 {
   "version": "6",
   "dialect": "sqlite",
-  "id": "6ff3502b-b7b7-4ed7-af81-0e3aacc93e15",
+  "id": "24376aad-663c-468a-9eb5-b930471910e6",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "tables": {
     "card": {
@@ -84,8 +84,12 @@
           "name": "card_deck_id_deck_id_fk",
           "tableFrom": "card",
           "tableTo": "deck",
-          "columnsFrom": ["deck_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "deck_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -165,10 +169,56 @@
       "indexes": {
         "email_verification_user_id_unique": {
           "name": "email_verification_user_id_unique",
-          "columns": ["user_id"],
+          "columns": [
+            "user_id"
+          ],
           "isUnique": true
         }
       },
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {}
+    },
+    "oauth_account": {
+      "name": "oauth_account",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "provider_id": {
+          "name": "provider_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "provider_user_id": {
+          "name": "provider_user_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        }
+      },
+      "indexes": {},
       "foreignKeys": {},
       "compositePrimaryKeys": {},
       "uniqueConstraints": {}
@@ -208,7 +258,9 @@
       "indexes": {
         "reset_token_user_id_unique": {
           "name": "reset_token_user_id_unique",
-          "columns": ["user_id"],
+          "columns": [
+            "user_id"
+          ],
           "isUnique": true
         }
       },
@@ -247,8 +299,12 @@
           "name": "session_user_id_user_id_fk",
           "tableFrom": "session",
           "tableTo": "user",
-          "columnsFrom": ["user_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "user_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -273,8 +329,22 @@
           "notNull": true,
           "autoincrement": false
         },
+        "avatar": {
+          "name": "avatar",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
         "email": {
           "name": "email",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "conflicts": {
+          "name": "conflicts",
           "type": "text",
           "primaryKey": false,
           "notNull": false,
@@ -284,19 +354,37 @@
           "name": "password",
           "type": "text",
           "primaryKey": false,
-          "notNull": true,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false,
           "autoincrement": false
         }
       },
       "indexes": {
         "user_username_unique": {
           "name": "user_username_unique",
-          "columns": ["username"],
+          "columns": [
+            "username"
+          ],
           "isUnique": true
         },
         "user_email_unique": {
           "name": "user_email_unique",
-          "columns": ["email"],
+          "columns": [
+            "email"
+          ],
           "isUnique": true
         }
       },
@@ -356,8 +444,12 @@
           "name": "user_deck_deck_id_deck_id_fk",
           "tableFrom": "user_deck",
           "tableTo": "deck",
-          "columnsFrom": ["deck_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "deck_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -365,9 +457,13 @@
           "name": "user_deck_user_id_user_id_fk",
           "tableFrom": "user_deck",
           "tableTo": "user",
-          "columnsFrom": ["user_id"],
-          "columnsTo": ["id"],
-          "onDelete": "cascade",
+          "columnsFrom": [
+            "user_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "set null",
           "onUpdate": "no action"
         }
       },

@@ -3,8 +3,18 @@ import { integer, sqliteTable, text } from 'drizzle-orm/sqlite-core';
 export const userTable = sqliteTable('user', {
   id: text('id').notNull().primaryKey(),
   username: text('username').notNull().unique(),
+  avatar: text('avatar'),
   email: text('email').unique(),
-  password: text('password').notNull(),
+  password: text('password'),
+  createdAt: text('created_at').$defaultFn(() => new Date().toISOString()),
+  updatedAt: text('updated_at').$defaultFn(() => new Date().toISOString()),
+});
+
+export const oauthAccountTable = sqliteTable('oauth_account', {
+  id: text('id').notNull().primaryKey(),
+  userId: text('user_id').notNull(),
+  providerId: text('provider_id').notNull(),
+  providerUserId: text('provider_user_id').notNull(),
   createdAt: text('created_at').$defaultFn(() => new Date().toISOString()),
   updatedAt: text('updated_at').$defaultFn(() => new Date().toISOString()),
 });
@@ -45,7 +55,7 @@ export const usersDeckTable = sqliteTable('user_deck', {
     .references(() => deckTable.id, { onDelete: 'cascade' }),
   userId: text('user_id')
     .notNull()
-    .references(() => userTable.id, { onDelete: 'cascade' }),
+    .references(() => userTable.id, { onDelete: 'set null' }),
   name: text('name').notNull(),
   createdAt: text('created_at').$defaultFn(() => new Date().toISOString()),
   updatedAt: text('updated_at').$defaultFn(() => new Date().toISOString()),

@@ -1,8 +1,8 @@
 {
   "version": "6",
   "dialect": "sqlite",
-  "id": "05f7a07e-2cf2-4c14-b348-fc4cc41ae1e0",
-  "prevId": "24376aad-663c-468a-9eb5-b930471910e6",
+  "id": "cbacefd1-e242-44d4-9d18-52fa4cd0e95b",
+  "prevId": "05f7a07e-2cf2-4c14-b348-fc4cc41ae1e0",
   "tables": {
     "card": {
       "name": "card",
@@ -184,6 +184,13 @@
       "columns": {
         "id": {
           "name": "id",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "user_id": {
+          "name": "user_id",
           "type": "text",
           "primaryKey": false,
           "notNull": true,

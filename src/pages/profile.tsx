@@ -98,7 +98,8 @@ export default function Profile() {
           <Input
             id="email"
             name="email"
-            placeholder="example@gmail.com"
+            placeholder={query.data?.isOauth ? '' : 'example@gmail.com' }
+            disabled={query.data?.isOauth}
             defaultValue={fields.email.value}
           />
           <span className="text-muted-foreground text-xs">
@@ -128,7 +129,6 @@ export default function Profile() {
             <OTPForm
               onSuccess={async () => {
                 openEmailVerificationDialog(false);
-
                 await queryClient.setQueryData(
                   ['profile'],
                   (profile: Record<string, unknown>) => ({

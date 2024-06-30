@@ -8,9 +8,9 @@ import {
   Section,
   Tailwind,
   Text,
-} from "@react-email/components";
+} from '@react-email/components';
 
-export function VerifyEmail({ code }: { code: string; }) {
+export function VerifyEmail({ code }: { code: string }) {
   return (
     <Html>
       <Head />

@@ -6,6 +6,8 @@ import 'dotenv/config';
 import type { Session, User } from 'lucia';
 import { authRoute } from './routes/auth';
 import { checkUserLogin } from './utils/check-user';
+import { githubLoginRouter } from './routes/oauth/github';
+import { googleLoginRouter } from './routes/oauth/google';
 
 const isProd = process.env.NODE_ENV === 'production';
 let html = await readFile(isProd ? 'build/index.html' : 'index.html', 'utf8');
@@ -32,6 +34,7 @@ declare module 'hono' {
   }
 }
 const app = new Hono();
+
 app.use(async (c, next) => {
   const isUserLoggedIn = await checkUserLogin(c);
   if (isUserLoggedIn.success) {
@@ -43,8 +46,9 @@ app.use(async (c, next) => {
   }
   return next();
 });
-
 app.route('/api/auth', authRoute);
+app.route('/', githubLoginRouter);
+app.route('/', googleLoginRouter);
 app.get('/api/profile', async (c) => {
   const user = c.get('user');
   if (!user) {
@@ -53,6 +57,7 @@ app.get('/api/profile', async (c) => {
   return c.json({
     email: user.email,
     username: user.username,
+    isOauth: user.isOauth,
   });
 });
 

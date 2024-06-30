@@ -1,8 +1,11 @@
 import { Link, Outlet } from '@tanstack/react-router';
 import { ModeToggle } from '../components/theme-switch';
 import { UserDropdown } from '../components/user-dropdown';
+import { useQuery } from '@tanstack/react-query';
+import { profileQueryOptions } from '../lib/queries';
 
 export default function Layout() {
+  const profile = useQuery(profileQueryOptions)
   return (
     <>
       <nav className="h-12 w-full">
@@ -12,9 +15,11 @@ export default function Layout() {
           </Link>
           <div className="flex items-center gap-6">
             <ModeToggle />
+            {profile.isLoading || !profile.data ? null : (
             <UserDropdown
-              user={{ username: 'lotus', email: 'jesusperez@gmail.com' }}
+              user={{ username: profile.data.username  }}
             />
+            )}
           </div>
         </div>
       </nav>

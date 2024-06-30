@@ -36,6 +36,7 @@ export default function SignupForm() {
       if (!res.ok) {
         const json = await res.json();
         setLastResult(json);
+        return;
       }
       await queryClient.invalidateQueries();
       navigate({ to: '/home' });
@@ -55,7 +56,7 @@ export default function SignupForm() {
       <Card className="w-full max-w-sm">
         <CardHeader>
           <CardTitle className="text-2xl">Sign up</CardTitle>
-          <CardDescription>Create account</CardDescription>
+          <CardDescription>Get started by creating an account</CardDescription>
         </CardHeader>
         <CardContent className="grid gap-4">
           <div className="grid gap-2">

@@ -9,9 +9,12 @@ import {
   Section,
   Tailwind,
   Text,
-} from "@react-email/components";
+} from '@react-email/components';
 
-export function ResetPasswordEmail({ tokenId, origin }: { tokenId: string; origin: string; }) {
+export function ResetPasswordEmail({
+  tokenId,
+  origin,
+}: { tokenId: string; origin: string }) {
   return (
     <Html>
       <Head />

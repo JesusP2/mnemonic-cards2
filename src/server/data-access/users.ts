@@ -27,33 +27,28 @@ export class UserModel<T extends typeof schema> {
   }
 
   async create(
-    {
-      id,
-      username,
-      email,
-      password,
-    }: {
+    data: {
       id: string;
       username: string;
-      email?: string | null;
-      password: string;
+      email: string | null;
+      password: string | null;
     },
     db: DB<T> = this.db,
   ) {
-    return db
-      .insert(userTable)
-      .values({
-        id,
-        username,
-        email,
-        password,
-      })
-      .onConflictDoNothing();
+    return db.insert(userTable).values(data).onConflictDoNothing();
   }
 
   async update(
     userId: string,
-    { username, email, password }: { username?: string; email?: string | null, password?: string },
+    {
+      username,
+      email,
+      password,
+    }: {
+      username?: string;
+      email?: string | null;
+      password?: string;
+    },
     db: DB<T> = this.db,
   ) {
     const data = {} as Record<string, unknown>;

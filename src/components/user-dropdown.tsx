@@ -14,7 +14,7 @@ import {
 
 export function UserDropdown({
   user,
-}: { user: { username: string; email: string | null } }) {
+}: { user: { username: string; } }) {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>

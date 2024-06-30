@@ -16,6 +16,7 @@ import {
   validateResetTokenSchema,
 } from '../../lib/schemas';
 import { emailVerificationModel } from '../data-access/email-verification';
+import { resetTokenModel } from '../data-access/reset-token';
 import {
   createUserSession,
   deleteAllUserSessions,
@@ -23,11 +24,10 @@ import {
 } from '../data-access/sessions';
 import { userModel } from '../data-access/users';
 import { db } from '../db/pool';
-import { createUlid, hashPassword, lucia } from '../lucia';
-import { resetTokenModel } from '../data-access/reset-token';
-import { sendEmail } from '../utils/email';
-import { VerifyEmail } from '../emails/verify-email';
 import { ResetPasswordEmail } from '../emails/reset-password';
+import { VerifyEmail } from '../emails/verify-email';
+import { createUlid, hashPassword, lucia } from '../lucia';
+import { sendEmail } from '../utils/email';
 
 export const authRoute = new Hono();
 authRoute.post('/signin', async (c) => {
@@ -95,7 +95,10 @@ authRoute.post('/signup', async (c) => {
       id: userId,
       username: submission.value.username,
       password: passwordHash,
+      email: null,
     });
+    await createUserSession(c, userId);
+    return c.json(null, 200);
   } catch (err) {
     return c.json(
       submission.reply({
@@ -106,8 +109,6 @@ authRoute.post('/signup', async (c) => {
       400,
     );
   }
-  await createUserSession(c, userId);
-  return c.json(null, 200);
 });
 
 authRoute.put('/profile', async (c) => {
@@ -130,6 +131,9 @@ authRoute.put('/profile', async (c) => {
   }
   submission.value.email =
     submission.value.email === '' ? null : submission.value.email;
+  if (user.isOauth) {
+    submission.value.email = null
+  }
   const isUsernameBeingUpdated = submission.value.username !== user.username;
   const isEmailBeingUpdated =
     typeof submission.value.email === 'string' &&
@@ -175,7 +179,11 @@ authRoute.put('/profile', async (c) => {
         // TODO: send URL to email
         const code = generateRandomString(6, alphabet('0-9'));
         await emailVerificationModel.deleteAllByUserId(user.id, tx);
-        await sendEmail(submission.value.email as string, 'Verify email', <VerifyEmail code={code} />)
+        await sendEmail(
+          submission.value.email as string,
+          'Verify email',
+          <VerifyEmail code={code} />,
+        );
         await emailVerificationModel.create(
           {
             id: createUlid(),
@@ -189,7 +197,7 @@ authRoute.put('/profile', async (c) => {
       }
     });
   } catch (err) {
-    console.error(err)
+    console.error(err);
     return c.json(
       submission.reply({
         fieldErrors: {
@@ -240,7 +248,7 @@ authRoute.post('/email-verification', async (c) => {
   try {
     await db.transaction(async (tx) => {
       await emailVerificationModel.deleteAllByUserId(user.id, tx);
-      await userModel.update(user.id, { email: emailVerification.email }, tx)
+      await userModel.update(user.id, { email: emailVerification.email }, tx);
     });
     return c.json(null, 200);
   } catch (err) {
@@ -284,7 +292,7 @@ authRoute.put('/password', async (c) => {
     return c.json(submission.reply(), 400);
   }
   try {
-    const user = await userModel.findByUsername(loggedInUser.id)
+    const user = await userModel.findByUsername(loggedInUser.id);
     const passwordHash = await hashPassword(submission.value.currentPassword);
     if (!user || user.password !== passwordHash) {
       return c.json(
@@ -296,7 +304,9 @@ authRoute.put('/password', async (c) => {
         400,
       );
     }
-    await userModel.update(loggedInUser.id, { password: await hashPassword(submission.value.newPassword) })
+    await userModel.update(loggedInUser.id, {
+      password: await hashPassword(submission.value.newPassword),
+    });
     await deleteUserSessions(c, loggedInUser.id);
     return c.json(null, 200);
   } catch (err) {
@@ -323,12 +333,12 @@ authRoute.post('/reset-password/email', async (c) => {
     return c.json(submission.reply(), 400);
   }
   try {
-    const user = await userModel.findByEmail(submission.value.email)
+    const user = await userModel.findByEmail(submission.value.email);
     if (!user) {
       return c.json(null, 200);
     }
 
-    await resetTokenModel.deleteByUserId(user.id)
+    await resetTokenModel.deleteByUserId(user.id);
     const tokenId = generateIdFromEntropySize(25); // 40 character
     const tokenHash = encodeHex(
       await sha256(new TextEncoder().encode(tokenId)),
@@ -338,11 +348,13 @@ authRoute.post('/reset-password/email', async (c) => {
       token: tokenHash,
       userId: user.id,
       expiresAt: createDate(new TimeSpan(2, 'h')).toISOString(),
-    })
+    });
     const origin = c.req.header('origin') as string;
-    await sendEmail(submission.value.email, 'Reset password', <ResetPasswordEmail origin={origin} tokenId={tokenId} />)
-    const url = `${origin}/auth/reset-password/${tokenId}`;
-    console.log(url);
+    await sendEmail(
+      submission.value.email,
+      'Reset password',
+      <ResetPasswordEmail origin={origin} tokenId={tokenId} />,
+    );
     return c.json(null, 200);
   } catch (err) {
     return c.json(
@@ -369,7 +381,7 @@ authRoute.post('/reset-password/token', async (c) => {
   const tokenHash = encodeHex(
     await sha256(new TextEncoder().encode(submission.value.token)),
   );
-  const record = await resetTokenModel.findByToken(tokenHash)
+  const record = await resetTokenModel.findByToken(tokenHash);
   if (!record || !isWithinExpirationDate(new Date(record.expiresAt))) {
     return c.json(
       submission.reply({
@@ -382,7 +394,7 @@ authRoute.post('/reset-password/token', async (c) => {
   }
   await lucia.invalidateUserSessions(record.userId);
   const passwordHash = await hashPassword(submission.value.password);
-  await userModel.update(record.userId, { password: passwordHash })
+  await userModel.update(record.userId, { password: passwordHash });
   await createUserSession(c, record.userId);
   return c.json(null, 200);
 });

@@ -5,15 +5,22 @@
     {
       "idx": 0,
       "version": "6",
-      "when": 1719555288040,
-      "tag": "0000_talented_micromacro",
+      "when": 1719704443270,
+      "tag": "0000_wandering_mac_gargan",
       "breakpoints": true
     },
     {
       "idx": 1,
       "version": "6",
-      "when": 1719620515800,
-      "tag": "0001_young_nocturne",
+      "when": 1719720447831,
+      "tag": "0001_sudden_otto_octavius",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "6",
+      "when": 1719721056115,
+      "tag": "0002_easy_maginty",
       "breakpoints": true
     }
   ]

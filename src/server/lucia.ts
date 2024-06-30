@@ -1,4 +1,5 @@
 import { DrizzleSQLiteAdapter } from '@lucia-auth/adapter-drizzle';
+import { GitHub, Google } from 'arctic';
 import { Lucia } from 'lucia';
 import { ulidFactory } from 'ulid-workers';
 import { db } from './db/pool';
@@ -17,9 +18,20 @@ export const lucia = new Lucia(adapter, {
     return {
       username: attributes.username,
       email: attributes.email,
+      isOauth: attributes.password === null
     };
   },
 });
+
+export const github = new GitHub(
+  envs.GITHUB_CLIENT_ID,
+  envs.GITHUB_CLIENT_SECRET,
+);
+export const google = new Google(
+  envs.GOOGLE_CLIENT_ID,
+  envs.GOOGLE_CLIENT_SECRET,
+  envs.GOOGLE_REDIRECT_URI,
+);
 
 export async function hashPassword(password: string) {
   const textEncoder = new TextEncoder();
@@ -47,7 +59,8 @@ declare module 'lucia' {
     Lucia: typeof lucia;
     DatabaseUserAttributes: {
       username: string;
-      email?: string | null;
+      email: string | null;
+      password: string | null;
     };
   }
 }

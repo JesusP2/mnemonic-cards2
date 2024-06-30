@@ -20,6 +20,7 @@ export const profileSchema = z.object({
     .min(3, 'Username must be at least  3 character long.')
     .max(255),
   email: z.string().email().max(255).nullish(),
+  avatar: z.instanceof(File).nullish(),
 });
 
 export const codeSchema = z.object({

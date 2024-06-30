@@ -41,6 +41,7 @@ export class UserModel<T extends typeof schema> {
       username: string;
       email: string | null;
       password: string | null;
+      avatar: string | null;
     },
     db: DB<T> = this.db,
   ) {
@@ -53,10 +54,12 @@ export class UserModel<T extends typeof schema> {
       username,
       email,
       password,
+      avatar,
     }: {
       username?: string;
       email?: string | null;
       password?: string;
+      avatar?: string;
     },
     db: DB<T> = this.db,
   ) {
@@ -69,6 +72,9 @@ export class UserModel<T extends typeof schema> {
     }
     if (typeof password !== 'undefined') {
       data.password = password;
+    }
+    if (typeof avatar !== 'undefined') {
+      data.avatar = avatar;
     }
     return db.update(userTable).set(data).where(eq(userTable.id, userId));
   }

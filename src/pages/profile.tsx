@@ -18,9 +18,11 @@ import { TypographyH4 } from '../components/ui/typography';
 import { profileQueryOptions } from '../lib/queries';
 import { queryClient } from '../lib/query-client';
 import { profileSchema } from '../lib/schemas';
+import { CircleUser } from 'lucide-react';
 
 export default function Profile() {
   const query = useQuery(profileQueryOptions);
+  const [avatar, setAvatar] = useState<null | string>(null);
   const [isEmailVerificationDialogOpen, openEmailVerificationDialog] =
     useState(false);
   const [lastResult, setLastResult] = useState(null);
@@ -53,13 +55,16 @@ export default function Profile() {
         return;
       }
       const json = await res.json();
-      if ('message' in json) {
+      if (json && 'message' in json) {
         openEmailVerificationDialog(true);
       }
+      await queryClient.invalidateQueries()
+      setAvatar(null)
     },
     defaultValue: {
       username: query.data?.username,
       email: query.data?.email,
+      avatar: null,
     },
   });
   return (
@@ -73,6 +78,38 @@ export default function Profile() {
         className="shrink-0 bg-border h-[1px] max-w-3xl my-6"
       />
       <form className="grid gap-6" id={form.id} onSubmit={form.onSubmit}>
+        <div>
+          <label className="relative group size-[96px] block">
+            {query.data?.avatar ? (
+              <img
+                src={avatar || query.data.avatar}
+                alt=""
+                className="rounded-full size-[96px]"
+              />
+            ) : (
+              <CircleUser size={96} />
+            )}
+            <div className="group-hover:grid place-items-center hidden bg-black absolute size-[97px] top-0 rounded-full bg-opacity-80 cursor-pointer">
+              <span className="font-medium">Edit</span>
+            </div>
+            <input
+              type="file"
+              name="avatar"
+              hidden
+              onChange={async (e) => {
+                const file = e.target.files?.[0];
+                if (!file) return;
+                const reader = new FileReader();
+                if (file) {
+                  reader.readAsDataURL(file);
+                }
+                reader.onload = () => {
+                  setAvatar(reader.result as string);
+                };
+              }}
+            />
+          </label>
+        </div>
         <div className="grid gap-2 max-w-3xl">
           <Label htmlFor="username" className="font-medium">
             Username
@@ -98,7 +135,7 @@ export default function Profile() {
           <Input
             id="email"
             name="email"
-            placeholder={query.data?.isOauth ? '' : 'example@gmail.com' }
+            placeholder={query.data?.isOauth ? '' : 'example@gmail.com'}
             disabled={query.data?.isOauth}
             defaultValue={fields.email.value}
           />

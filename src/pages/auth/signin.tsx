@@ -57,7 +57,7 @@ export default function LoginForm() {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <section className="mb-4 flex flex-col gap-y-2">
+          <section className="mb-4 flex flex-col gap-y-4">
             <a
               href="/auth/google"
               className={cn(
@@ -67,9 +67,9 @@ export default function LoginForm() {
             >
               <svg
                 xmlns="http://www.w3.org/2000/svg"
-                width="24"
-                height="24"
-                fill="#000000"
+                width="22"
+                height="22"
+                fill="currentColor"
                 viewBox="0 0 256 256"
               >
                 <title>google icon</title>
@@ -86,9 +86,9 @@ export default function LoginForm() {
             >
               <svg
                 xmlns="http://www.w3.org/2000/svg"
-                width="24"
-                height="24"
-                fill="#000000"
+                width="22"
+                height="22"
+                fill="currentColor"
                 viewBox="0 0 256 256"
               >
                 <title>github icon</title>

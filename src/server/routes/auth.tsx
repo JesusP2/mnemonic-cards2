@@ -1,6 +1,5 @@
 import { parseWithZod } from '@conform-to/zod';
-import { Context, Hono } from 'hono';
-import { generateIdFromEntropySize } from 'lucia';
+import { Hono } from 'hono';
 import { TimeSpan, createDate, isWithinExpirationDate } from 'oslo';
 import { alphabet, generateRandomString } from 'oslo/crypto';
 import { sha256 } from 'oslo/crypto';
@@ -10,7 +9,6 @@ import {
   changePasswordSchema,
   codeSchema,
   profileSchema,
-  resetTokenSchema,
   signinSchema,
   signupSchema,
   validateResetTokenSchema,
@@ -28,9 +26,9 @@ import { ResetPasswordEmail } from '../emails/reset-password';
 import { VerifyEmail } from '../emails/verify-email';
 import { createUlid, hashPassword, lucia } from '../lucia';
 import { sendEmail } from '../utils/email';
-import { ReactNode } from '@tanstack/react-router';
 import { generateTokenEndpoint } from '../utils/generate-token';
 import { MagicLinkEmail } from '../emails/magic-link';
+import { uploadFile } from '../utils/r2';
 
 export const authRoute = new Hono();
 authRoute.post('/signin', async (c) => {
@@ -99,6 +97,7 @@ authRoute.post('/signup', async (c) => {
       username: submission.value.username,
       password: passwordHash,
       email: null,
+      avatar: null,
     });
     await createUserSession(c, userId);
     return c.json(null, 200);
@@ -132,6 +131,7 @@ authRoute.put('/profile', async (c) => {
   if (submission.status !== 'success') {
     return c.json(submission.reply(), 400);
   }
+  console.log(submission.value);
   submission.value.email =
     submission.value.email === '' ? null : submission.value.email;
   if (user.isOauth) {
@@ -170,11 +170,20 @@ authRoute.put('/profile', async (c) => {
         );
       }
     }
+    let avatarKey = null;
+    if (submission.value.avatar instanceof File) {
+      const extension = submission.value.avatar.type.split('/')[1];
+      avatarKey = `${createUlid()}.${extension}`;
+      await uploadFile(Buffer.from(await submission.value.avatar.arrayBuffer()), avatarKey)
+    }
     await db.transaction(async (tx) => {
-      if (isUsernameBeingUpdated) {
+      if (isUsernameBeingUpdated || submission.value.avatar instanceof File) {
         await userModel.update(
           user.id,
-          { username: submission.value.username },
+          {
+            username: isUsernameBeingUpdated ? submission.value.username : undefined,
+            avatar: avatarKey ? avatarKey : undefined,
+          },
           tx,
         );
       }
@@ -369,17 +378,15 @@ authRoute.post(
 authRoute.get('/magic-link/:token', async (c) => {
   const loggedInUser = c.get('user');
   if (loggedInUser) {
-    return c.redirect('/home')
+    return c.redirect('/home');
   }
-  const token = c.req.param('token')
-  const tokenHash = encodeHex(
-    await sha256(new TextEncoder().encode(token)),
-  );
+  const token = c.req.param('token');
+  const tokenHash = encodeHex(await sha256(new TextEncoder().encode(token)));
   const record = await magicLinkModel.findByToken(tokenHash);
   if (!record || !isWithinExpirationDate(new Date(record.expiresAt))) {
     return c.redirect('/auth/signin');
   }
   await lucia.invalidateUserSessions(record.userId);
   await createUserSession(c, record.userId);
-  return c.redirect('/home')
+  return c.redirect('/home');
 });

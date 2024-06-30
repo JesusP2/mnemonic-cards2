@@ -18,6 +18,7 @@ export const lucia = new Lucia(adapter, {
     return {
       username: attributes.username,
       email: attributes.email,
+      avatar: attributes.avatar,
       isOauth: attributes.password === null
     };
   },
@@ -60,6 +61,7 @@ declare module 'lucia' {
     DatabaseUserAttributes: {
       username: string;
       email: string | null;
+      avatar: string | null;
       password: string | null;
     };
   }

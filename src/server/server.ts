@@ -8,6 +8,7 @@ import { authRoute } from './routes/auth';
 import { checkUserLogin } from './utils/check-user';
 import { githubLoginRouter } from './routes/oauth/github';
 import { googleLoginRouter } from './routes/oauth/google';
+import { createPresignedUrl } from './utils/r2';
 
 const isProd = process.env.NODE_ENV === 'production';
 let html = await readFile(isProd ? 'build/index.html' : 'index.html', 'utf8');
@@ -54,10 +55,15 @@ app.get('/api/profile', async (c) => {
   if (!user) {
     return c.json(null);
   }
+  let url = null;
+  if (user.avatar) {
+    url = await createPresignedUrl(user.avatar)
+  }
   return c.json({
     email: user.email,
     username: user.username,
     isOauth: user.isOauth,
+    avatar: url,
   });
 });
 

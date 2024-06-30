@@ -7,6 +7,7 @@ import { createUlid, google } from '../../lucia';
 import { createUserSession } from '../../data-access/sessions.js';
 import { oauthAccountTable } from '../../db/schema/index.js';
 import { and, eq } from 'drizzle-orm';
+import { uploadFile } from '../../utils/r2.js';
 
 export const googleLoginRouter = new Hono();
 
@@ -46,6 +47,18 @@ googleLoginRouter.get('/auth/google/callback', async (c) => {
       await createUserSession(c, existingUser.userId)
       return c.redirect('/')
     }
+    let avatarKey = null;
+    if (googleUser.picture) {
+      const pictureRes = await fetch(googleUser.picture)
+      const resType = pictureRes.headers.get('Content-Type')
+      const allowedContentTypes = ['image/png', 'image/jpeg', 'image/webp']
+      if (resType && allowedContentTypes.includes(resType)) {
+        const buf = Buffer.from(await pictureRes.arrayBuffer())
+        const extension = resType.split('/')[1]
+        avatarKey = `${createUlid()}.${extension}`
+        await uploadFile(buf, avatarKey)
+      }
+    }
     const userId = createUlid();
     await db.transaction(async (tx) => {
       const oauthId = createUlid();
@@ -60,6 +73,7 @@ googleLoginRouter.get('/auth/google/callback', async (c) => {
         username: googleUser.name,
         email: null,
         password: null,
+        avatar: avatarKey
       }, tx)
     });
     await createUserSession(c, userId)

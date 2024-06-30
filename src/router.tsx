@@ -64,6 +64,12 @@ const signinRoute = createRoute({
   component: lazyRouteComponent(() => import('./pages/auth/signin')),
 });
 
+const magicLinkRoute = createRoute({
+  getParentRoute: () => authLayout,
+  path: 'magic-link',
+  component: lazyRouteComponent(() => import('./pages/auth/magic-link')),
+});
+
 const signupRoute = createRoute({
   getParentRoute: () => authLayout,
   path: 'signup',
@@ -97,6 +103,7 @@ const routeTree = rootRoute.addChildren([
     signupRoute,
     forgotPasswordRoute,
     resetPasswordRoute,
+    magicLinkRoute,
   ]),
 ]);
 export const router = createRouter({ routeTree, defaultPreload: 'intent' });

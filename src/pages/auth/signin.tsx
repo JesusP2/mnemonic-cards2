@@ -154,6 +154,12 @@ export default function LoginForm() {
             <Button type="submit" className="w-full">
               Sign in
             </Button>
+            <Link
+              className={cn(buttonVariants({ variant: 'default' }), 'w-full')}
+              to="/auth/magic-link"
+            >
+              Sign in with magic link
+            </Link>
           </section>
           <div className="mt-4 text-center text-sm">
             Don&apos;t have an account?{' '}

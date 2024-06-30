@@ -75,3 +75,10 @@ export const resetTokenTable = sqliteTable('reset_token', {
   userId: text('user_id').notNull().unique(),
   expiresAt: text('expires_at').notNull(),
 });
+
+export const magicLinkTable = sqliteTable('magic_link', {
+  id: text('id').notNull().primaryKey(),
+  token: text('token').notNull(),
+  userId: text('user_id').notNull().unique(),
+  expiresAt: text('expires_at').notNull(),
+});

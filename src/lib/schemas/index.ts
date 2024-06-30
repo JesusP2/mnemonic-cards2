@@ -39,3 +39,7 @@ export const validateResetTokenSchema = z.object({
   password: passwordSchema,
   token: z.string().max(255),
 });
+
+export const magicLinkTokenSchema = z.object({
+  token: z.string().max(255),
+})

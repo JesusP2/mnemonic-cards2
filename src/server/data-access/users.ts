@@ -8,6 +8,15 @@ import type { DB } from '../types';
 export class UserModel<T extends typeof schema> {
   constructor(private db: LibSQLDatabase<T>) {}
 
+  async findById(id: string, db: DB<T> = this.db) {
+    const [user] = await db
+      .select()
+      .from(userTable)
+      .where(eq(userTable.id, id))
+      .limit(1);
+    return user;
+  }
+
   async findByUsername(username: string, db: DB<T> = this.db) {
     const [user] = await db
       .select()

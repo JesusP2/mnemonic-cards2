@@ -13,9 +13,9 @@ import {
 } from '@react-email/components';
 
 export function MagicLinkEmail({
-  token,
+  tokenId,
   origin,
-}: { token: string; origin: string }) {
+}: { tokenId: string; origin: string }) {
   const previewText = `You've been invited to a group!`;
   return (
     <Html>
@@ -42,7 +42,7 @@ export function MagicLinkEmail({
 
                 <Text className="text-black font-medium text-[14px] leading-[24px]">
                   <Link
-                    href={`${origin}/auth/login/magic?token=${token}`}
+                    href={`${origin}/api/auth/magic-link/${tokenId}`}
                     target="_blank"
                     className="text-[#2754C5] underline"
                   >

@@ -1,5 +1,5 @@
 import { parseWithZod } from '@conform-to/zod';
-import { Hono } from 'hono';
+import { Context, Hono } from 'hono';
 import { generateIdFromEntropySize } from 'lucia';
 import { TimeSpan, createDate, isWithinExpirationDate } from 'oslo';
 import { alphabet, generateRandomString } from 'oslo/crypto';
@@ -16,7 +16,7 @@ import {
   validateResetTokenSchema,
 } from '../../lib/schemas';
 import { emailVerificationModel } from '../data-access/email-verification';
-import { resetTokenModel } from '../data-access/reset-token';
+import { magicLinkModel, resetTokenModel } from '../data-access/reset-token';
 import {
   createUserSession,
   deleteAllUserSessions,
@@ -28,6 +28,9 @@ import { ResetPasswordEmail } from '../emails/reset-password';
 import { VerifyEmail } from '../emails/verify-email';
 import { createUlid, hashPassword, lucia } from '../lucia';
 import { sendEmail } from '../utils/email';
+import { ReactNode } from '@tanstack/react-router';
+import { generateTokenEndpoint } from '../utils/generate-token';
+import { MagicLinkEmail } from '../emails/magic-link';
 
 export const authRoute = new Hono();
 authRoute.post('/signin', async (c) => {
@@ -132,7 +135,7 @@ authRoute.put('/profile', async (c) => {
   submission.value.email =
     submission.value.email === '' ? null : submission.value.email;
   if (user.isOauth) {
-    submission.value.email = null
+    submission.value.email = null;
   }
   const isUsernameBeingUpdated = submission.value.username !== user.username;
   const isEmailBeingUpdated =
@@ -321,51 +324,10 @@ authRoute.put('/password', async (c) => {
   }
 });
 
-authRoute.post('/reset-password/email', async (c) => {
-  const loggedInUser = c.get('user');
-  if (loggedInUser) {
-    return c.json(null, 403);
-  }
-  const submission = parseWithZod(await c.req.formData(), {
-    schema: resetTokenSchema,
-  });
-  if (submission.status !== 'success') {
-    return c.json(submission.reply(), 400);
-  }
-  try {
-    const user = await userModel.findByEmail(submission.value.email);
-    if (!user) {
-      return c.json(null, 200);
-    }
-
-    await resetTokenModel.deleteByUserId(user.id);
-    const tokenId = generateIdFromEntropySize(25); // 40 character
-    const tokenHash = encodeHex(
-      await sha256(new TextEncoder().encode(tokenId)),
-    );
-    await resetTokenModel.create({
-      id: createUlid(),
-      token: tokenHash,
-      userId: user.id,
-      expiresAt: createDate(new TimeSpan(2, 'h')).toISOString(),
-    });
-    const origin = c.req.header('origin') as string;
-    await sendEmail(
-      submission.value.email,
-      'Reset password',
-      <ResetPasswordEmail origin={origin} tokenId={tokenId} />,
-    );
-    return c.json(null, 200);
-  } catch (err) {
-    return c.json(
-      submission.reply({
-        fieldErrors: {
-          email: ['Something went wrong, please try again'],
-        },
-      }),
-    );
-  }
-});
+authRoute.post(
+  '/reset-password/email',
+  generateTokenEndpoint(ResetPasswordEmail, 'Reset password', resetTokenModel),
+);
 
 authRoute.post('/reset-password/token', async (c) => {
   const loggedInUser = c.get('user');
@@ -397,4 +359,27 @@ authRoute.post('/reset-password/token', async (c) => {
   await userModel.update(record.userId, { password: passwordHash });
   await createUserSession(c, record.userId);
   return c.json(null, 200);
+});
+
+authRoute.post(
+  '/magic-link/generate',
+  generateTokenEndpoint(MagicLinkEmail, 'Magic link', magicLinkModel),
+);
+
+authRoute.get('/magic-link/:token', async (c) => {
+  const loggedInUser = c.get('user');
+  if (loggedInUser) {
+    return c.redirect('/home')
+  }
+  const token = c.req.param('token')
+  const tokenHash = encodeHex(
+    await sha256(new TextEncoder().encode(token)),
+  );
+  const record = await magicLinkModel.findByToken(tokenHash);
+  if (!record || !isWithinExpirationDate(new Date(record.expiresAt))) {
+    return c.redirect('/auth/signin');
+  }
+  await lucia.invalidateUserSessions(record.userId);
+  await createUserSession(c, record.userId);
+  return c.redirect('/home')
 });

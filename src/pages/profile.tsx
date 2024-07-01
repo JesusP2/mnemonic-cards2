@@ -79,17 +79,17 @@ export default function Profile() {
       />
       <form className="grid gap-6" id={form.id} onSubmit={form.onSubmit}>
         <div>
-          <label className="relative group size-[96px] block">
+          <label className="relative group size-[96px] block overflow-hidden  rounded-full">
             {query.data?.avatar ? (
               <img
                 src={avatar || query.data.avatar}
                 alt=""
-                className="rounded-full size-[96px]"
+                className="size-[96px]"
               />
             ) : (
               <CircleUser size={96} />
             )}
-            <div className="group-hover:grid place-items-center hidden bg-black absolute size-[97px] top-0 rounded-full bg-opacity-80 cursor-pointer">
+            <div className="group-hover:grid place-items-center hidden bg-black absolute left-0 size-[96px] top-0 bg-opacity-50 cursor-pointer">
               <span className="font-medium">Edit</span>
             </div>
             <input
@@ -109,6 +109,7 @@ export default function Profile() {
               }}
             />
           </label>
+          <span className="text-sm text-red-500">{fields.avatar.errors}</span>
         </div>
         <div className="grid gap-2 max-w-3xl">
           <Label htmlFor="username" className="font-medium">

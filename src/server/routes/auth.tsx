@@ -1,9 +1,6 @@
 import { parseWithZod } from '@conform-to/zod';
 import { Hono } from 'hono';
-import {
-  signinSchema,
-  signupSchema,
-} from '../../lib/schemas';
+import { signinSchema, signupSchema } from '../../lib/schemas';
 import {
   createUserSession,
   deleteAllUserSessions,
@@ -14,7 +11,7 @@ import { createUlid, hashPassword } from '../lucia';
 import { authRateLimiter, rateLimitMiddleware } from '../utils/rate-limiter';
 
 export const authRoute = new Hono();
-authRoute.use(rateLimitMiddleware(authRateLimiter))
+authRoute.use(rateLimitMiddleware(authRateLimiter));
 authRoute.post('/signin', async (c) => {
   if (c.get('user')) {
     return c.json(null, 403);

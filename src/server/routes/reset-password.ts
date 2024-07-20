@@ -3,13 +3,9 @@ import { Hono } from 'hono';
 import { isWithinExpirationDate } from 'oslo';
 import { sha256 } from 'oslo/crypto';
 import { encodeHex } from 'oslo/encoding';
-import {
-  validateResetTokenSchema,
-} from '../../lib/schemas';
+import { validateResetTokenSchema } from '../../lib/schemas';
 import { resetTokenModel } from '../data-access/reset-token';
-import {
-  createUserSession,
-} from '../data-access/sessions';
+import { createUserSession } from '../data-access/sessions';
 import { userModel } from '../data-access/users';
 import { ResetPasswordEmail } from '../emails/reset-password';
 import { hashPassword, lucia } from '../lucia';
@@ -17,7 +13,7 @@ import { generateTokenEndpoint } from '../utils/generate-token';
 import { emailRateLimiter, rateLimitMiddleware } from '../utils/rate-limiter';
 
 export const resetPasswordRoute = new Hono();
-resetPasswordRoute.use(rateLimitMiddleware(emailRateLimiter))
+resetPasswordRoute.use(rateLimitMiddleware(emailRateLimiter));
 resetPasswordRoute.post(
   '/reset-password/email',
   generateTokenEndpoint(ResetPasswordEmail, 'Reset password', resetTokenModel),

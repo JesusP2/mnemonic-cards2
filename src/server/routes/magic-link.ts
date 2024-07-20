@@ -3,16 +3,14 @@ import { isWithinExpirationDate } from 'oslo';
 import { sha256 } from 'oslo/crypto';
 import { encodeHex } from 'oslo/encoding';
 import { magicLinkModel } from '../data-access/reset-token';
-import {
-  createUserSession,
-} from '../data-access/sessions';
+import { createUserSession } from '../data-access/sessions';
+import { MagicLinkEmail } from '../emails/magic-link';
 import { lucia } from '../lucia';
 import { generateTokenEndpoint } from '../utils/generate-token';
-import { MagicLinkEmail } from '../emails/magic-link';
 import { emailRateLimiter, rateLimitMiddleware } from '../utils/rate-limiter';
 
 export const magicLinkRoute = new Hono();
-magicLinkRoute.use(rateLimitMiddleware(emailRateLimiter))
+magicLinkRoute.use(rateLimitMiddleware(emailRateLimiter));
 magicLinkRoute.post(
   '/magic-link/generate',
   generateTokenEndpoint(MagicLinkEmail, 'Magic link', magicLinkModel),
@@ -33,4 +31,3 @@ magicLinkRoute.get('/magic-link/:token', async (c) => {
   await createUserSession(c, record.userId);
   return c.redirect('/home');
 });
-

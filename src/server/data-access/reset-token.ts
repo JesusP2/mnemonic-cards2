@@ -1,11 +1,14 @@
 import { eq } from 'drizzle-orm';
 import { db } from '../db/pool';
 import type * as schema from '../db/schema';
-import { resetTokenTable, magicLinkTable } from '../db/schema';
+import { magicLinkTable, resetTokenTable } from '../db/schema';
 import type { DB } from '../types';
 
 export class ResetTokenModel<T extends typeof schema> {
-  constructor(private db: DB<T>, private table: typeof resetTokenTable | typeof magicLinkTable) {}
+  constructor(
+    private db: DB<T>,
+    private table: typeof resetTokenTable | typeof magicLinkTable,
+  ) {}
 
   async findByToken(token: string, db: DB<T> = this.db) {
     const [record] = await db

@@ -38,10 +38,8 @@ export const cardTable = sqliteTable('card', {
   deckId: text('deck_id')
     .notNull()
     .references(() => deckTable.id, { onDelete: 'cascade' }),
-  frontImageUrl: text('front_image_url'),
   frontImageKey: text('front_image_key'),
   frontText: text('front_text'),
-  backImageUrl: text('back_image_url'),
   backImageKey: text('back_image_key'),
   backText: text('back_text'),
   createdAt: text('created_at').$defaultFn(() => new Date().toISOString()),
@@ -52,10 +50,11 @@ export const usersDeckTable = sqliteTable('user_deck', {
   id: text('id').notNull().primaryKey(),
   deckId: text('deck_id')
     .notNull()
-    .references(() => deckTable.id, { onDelete: 'cascade' }),
+    .references(() => deckTable.id, { onDelete: 'no action' }),
   userId: text('user_id')
     .notNull()
-    .references(() => userTable.id, { onDelete: 'set null' }),
+    .references(() => userTable.id, { onDelete: 'cascade' }),
+  private: integer('private'),
   name: text('name').notNull(),
   createdAt: text('created_at').$defaultFn(() => new Date().toISOString()),
   updatedAt: text('updated_at').$defaultFn(() => new Date().toISOString()),
@@ -83,16 +82,15 @@ export const magicLinkTable = sqliteTable('magic_link', {
   expiresAt: text('expires_at').notNull(),
 });
 
-
 export const rateLimitTable = sqliteTable(
-  "rate_limit",
+  'rate_limit',
   {
-    id: text("id").notNull().primaryKey(),
-    key: text("key").notNull(),
-    createdAt: integer("created_at").notNull(),
+    id: text('id').notNull().primaryKey(),
+    key: text('key').notNull(),
+    createdAt: integer('created_at').notNull(),
   },
   (table) => ({
-    KeyCreatedAtIdx: index("rate_limit__key__created_at__idx").on(
+    KeyCreatedAtIdx: index('rate_limit__key__created_at__idx').on(
       table.key,
       table.createdAt,
     ),

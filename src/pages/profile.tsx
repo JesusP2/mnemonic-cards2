@@ -1,6 +1,7 @@
 import { useForm } from '@conform-to/react';
 import { parseWithZod } from '@conform-to/zod';
 import { useQuery } from '@tanstack/react-query';
+import { CircleUser } from 'lucide-react';
 import { useState } from 'react';
 import { z } from 'zod';
 import { OTPForm } from '../components/form-otp';
@@ -18,7 +19,6 @@ import { TypographyH4 } from '../components/ui/typography';
 import { profileQueryOptions } from '../lib/queries';
 import { queryClient } from '../lib/query-client';
 import { profileSchema } from '../lib/schemas';
-import { CircleUser } from 'lucide-react';
 
 export default function Profile() {
   const query = useQuery(profileQueryOptions);
@@ -58,8 +58,8 @@ export default function Profile() {
       if (json && 'message' in json) {
         openEmailVerificationDialog(true);
       }
-      await queryClient.invalidateQueries()
-      setAvatar(null)
+      await queryClient.invalidateQueries();
+      setAvatar(null);
     },
     defaultValue: {
       username: query.data?.username,

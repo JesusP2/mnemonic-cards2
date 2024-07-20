@@ -2,11 +2,11 @@ import { generateState } from 'arctic';
 import { and, eq } from 'drizzle-orm';
 import { Hono } from 'hono';
 import { getCookie, setCookie } from 'hono/cookie';
+import { createUserSession } from '../../data-access/sessions.js';
 import { userModel } from '../../data-access/users.js';
 import { db } from '../../db/pool.js';
 import { oauthAccountTable } from '../../db/schema/index.js';
 import { createUlid, github } from '../../lucia.js';
-import { createUserSession } from '../../data-access/sessions.js';
 
 export const githubLoginRouter = new Hono();
 
@@ -28,7 +28,7 @@ githubLoginRouter.get('/auth/github/callback', async (c) => {
   const state = c.req.query('state')?.toString() ?? null;
   const storedState = getCookie(c).github_oauth_state ?? null;
   if (!code || !state || !storedState || state !== storedState) {
-    return c.redirect('/auth/signin')
+    return c.redirect('/auth/signin');
   }
   try {
     const tokens = await github.validateAuthorizationCode(code);
@@ -38,10 +38,18 @@ githubLoginRouter.get('/auth/github/callback', async (c) => {
       },
     });
     const githubUser: GitHubUser = await githubUserResponse.json();
-    const [existingUser] = await db.select().from(oauthAccountTable).where(and(eq(oauthAccountTable.providerId, 'github'), eq(oauthAccountTable.providerUserId, githubUser.id)))
+    const [existingUser] = await db
+      .select()
+      .from(oauthAccountTable)
+      .where(
+        and(
+          eq(oauthAccountTable.providerId, 'github'),
+          eq(oauthAccountTable.providerUserId, githubUser.id),
+        ),
+      );
     if (existingUser) {
-      await createUserSession(c, existingUser.userId)
-      return c.redirect('/')
+      await createUserSession(c, existingUser.userId);
+      return c.redirect('/');
     }
     const userId = createUlid();
     await db.transaction(async (tx) => {
@@ -52,14 +60,18 @@ githubLoginRouter.get('/auth/github/callback', async (c) => {
         providerId: 'github',
         providerUserId: githubUser.id,
       });
-      await userModel.create({
-        id: userId,
-        username: githubUser.login,
-        email: null,
-        password: null,
-      }, tx)
+      await userModel.create(
+        {
+          id: userId,
+          username: githubUser.login,
+          email: null,
+          password: null,
+          avatar: null,
+        },
+        tx,
+      );
     });
-    await createUserSession(c, userId)
+    await createUserSession(c, userId);
     return c.redirect('/');
   } catch (e) {
     return c.redirect('/auth/signin');
@@ -69,11 +81,4 @@ githubLoginRouter.get('/auth/github/callback', async (c) => {
 interface GitHubUser {
   id: string;
   login: string;
-}
-
-interface GithubEmail {
-  email: string;
-  verified: boolean;
-  primary: boolean;
-  visibility?: null | 'public';
 }

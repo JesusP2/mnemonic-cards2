@@ -13,9 +13,9 @@ import {
 } from '../../components//ui/card';
 import { Input } from '../../components//ui/input';
 import { Label } from '../../components/ui/label';
+import { cn } from '../../components/ui/utils';
 import { queryClient } from '../../lib/query-client';
 import { signinSchema } from '../../lib/schemas';
-import { cn } from '../../components/ui/utils';
 
 export default function LoginForm() {
   const navigate = useNavigate({ from: '/auth/signin' });

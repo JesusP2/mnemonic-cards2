@@ -1,21 +1,21 @@
-import { parseWithZod } from "@conform-to/zod";
-import type { Context } from "hono";
-import { resetTokenSchema } from "../../lib/schemas";
-import { userModel } from "../data-access/users";
-import { generateIdFromEntropySize } from "lucia";
-import { encodeHex } from "oslo/encoding";
-import { sha256 } from "oslo/crypto";
-import { createUlid } from "../lucia";
-import { createDate, TimeSpan } from "oslo";
-import { sendEmail } from "./email";
-import type { ResetPasswordEmail } from "../emails/reset-password";
-import type * as schema from '../db/schema'
-import type { ResetTokenModel } from "../data-access/reset-token";
+import { parseWithZod } from '@conform-to/zod';
+import type { Context } from 'hono';
+import { generateIdFromEntropySize } from 'lucia';
+import { TimeSpan, createDate } from 'oslo';
+import { sha256 } from 'oslo/crypto';
+import { encodeHex } from 'oslo/encoding';
+import { resetTokenSchema } from '../../lib/schemas';
+import type { ResetTokenModel } from '../data-access/reset-token';
+import { userModel } from '../data-access/users';
+import type * as schema from '../db/schema';
+import type { ResetPasswordEmail } from '../emails/reset-password';
+import { createUlid } from '../lucia';
+import { sendEmail } from './email';
 
 export function generateTokenEndpoint(
   Template: typeof ResetPasswordEmail,
   subject: string,
-  model: ResetTokenModel<typeof schema>
+  model: ResetTokenModel<typeof schema>,
 ) {
   return async (c: Context) => {
     const loggedInUser = c.get('user');

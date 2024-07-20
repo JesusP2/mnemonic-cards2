@@ -19,7 +19,7 @@ export const lucia = new Lucia(adapter, {
       username: attributes.username,
       email: attributes.email,
       avatar: attributes.avatar,
-      isOauth: attributes.password === null
+      isOauth: attributes.password === null,
     };
   },
 });

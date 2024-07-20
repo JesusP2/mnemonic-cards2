@@ -4,7 +4,8 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "start": "tsx --env-file=.env ./src/server/index.ts",
+    "start": "tsx --env-file=.env ./src/server/server.ts",
+    "fsrs": "tsx ./src/lib/fsrs/index.ts",
     "dev": "vite",
     "email": "email dev -d ./src/server/emails",
     "build": "tsc -b && vite build",
@@ -65,6 +66,7 @@
     "sonner": "^1.4.41",
     "tailwind-merge": "^2.3.0",
     "tailwindcss-animate": "^1.0.7",
+    "ts-fsrs": "^3.5.7",
     "tsx": "^4.15.7",
     "ulid-workers": "^2.1.0",
     "zod": "^3.23.8"

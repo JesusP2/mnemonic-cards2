@@ -1,4 +1,5 @@
 import { Link } from '@tanstack/react-router';
+import { Home, LogOut, Settings } from 'lucide-react';
 import { FiChevronRight } from 'react-icons/fi';
 import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar';
 import { Button } from './ui/button';
@@ -11,7 +12,6 @@ import {
   DropdownMenuShortcut,
   DropdownMenuTrigger,
 } from './ui/dropdown-menu';
-import { Settings, LogOut, Home } from 'lucide-react';
 
 export function UserDropdown({
   user,

@@ -4,13 +4,13 @@ import { serveStatic } from '@hono/node-server/serve-static';
 import { Hono } from 'hono';
 import 'dotenv/config';
 import type { Session, User } from 'lucia';
+import { accountRoute } from './routes/account';
 import { authRoute } from './routes/auth';
-import { checkUserLogin } from './utils/check-user';
+import { magicLinkRoute } from './routes/magic-link';
 import { githubLoginRouter } from './routes/oauth/github';
 import { googleLoginRouter } from './routes/oauth/google';
+import { checkUserLogin } from './utils/check-user';
 import { createPresignedUrl } from './utils/r2';
-import { accountRoute } from './routes/account';
-import { magicLinkRoute } from './routes/magic-link';
 
 const isProd = process.env.NODE_ENV === 'production';
 let html = await readFile(isProd ? 'build/index.html' : 'index.html', 'utf8');
@@ -51,8 +51,8 @@ app.use(async (c, next) => {
 });
 app.route('/api/auth', authRoute);
 app.route('/api/auth', accountRoute);
-app.route('/api/auth', magicLinkRoute)
-app.route('/api/auth', magicLinkRoute)
+app.route('/api/auth', magicLinkRoute);
+app.route('/api/auth', magicLinkRoute);
 app.route('/', githubLoginRouter);
 app.route('/', googleLoginRouter);
 app.get('/api/profile', async (c) => {
@@ -62,7 +62,7 @@ app.get('/api/profile', async (c) => {
   }
   let url = null;
   if (user.avatar) {
-    url = await createPresignedUrl(user.avatar)
+    url = await createPresignedUrl(user.avatar);
   }
   return c.json({
     email: user.email,

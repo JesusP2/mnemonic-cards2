@@ -9,19 +9,17 @@ import {
   profileSchema,
 } from '../../lib/schemas';
 import { emailVerificationModel } from '../data-access/email-verification';
-import {
-  deleteUserSessions,
-} from '../data-access/sessions';
+import { deleteUserSessions } from '../data-access/sessions';
 import { userModel } from '../data-access/users';
 import { db } from '../db/pool';
+import { VerifyEmail } from '../emails/verify-email';
 import { createUlid, hashPassword } from '../lucia';
 import { sendEmail } from '../utils/email';
 import { uploadFile } from '../utils/r2';
-import { VerifyEmail } from '../emails/verify-email';
 import { emailRateLimiter, rateLimitMiddleware } from '../utils/rate-limiter';
 
 export const accountRoute = new Hono();
-accountRoute.use(rateLimitMiddleware(emailRateLimiter))
+accountRoute.use(rateLimitMiddleware(emailRateLimiter));
 accountRoute.put('/profile', async (c) => {
   const user = c.get('user');
   if (!user) {
@@ -83,14 +81,19 @@ accountRoute.put('/profile', async (c) => {
     if (submission.value.avatar instanceof File) {
       const extension = submission.value.avatar.type.split('/')[1];
       avatarKey = `${createUlid()}.${extension}`;
-      await uploadFile(Buffer.from(await submission.value.avatar.arrayBuffer()), avatarKey)
+      await uploadFile(
+        Buffer.from(await submission.value.avatar.arrayBuffer()),
+        avatarKey,
+      );
     }
     await db.transaction(async (tx) => {
       if (isUsernameBeingUpdated || submission.value.avatar instanceof File) {
         await userModel.update(
           user.id,
           {
-            username: isUsernameBeingUpdated ? submission.value.username : undefined,
+            username: isUsernameBeingUpdated
+              ? submission.value.username
+              : undefined,
             avatar: avatarKey ? avatarKey : undefined,
           },
           tx,

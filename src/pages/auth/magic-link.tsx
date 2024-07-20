@@ -1,5 +1,6 @@
 import { useForm } from '@conform-to/react';
 import { parseWithZod } from '@conform-to/zod';
+import { Link } from '@tanstack/react-router';
 import { CircleCheckBig } from 'lucide-react';
 import { useState } from 'react';
 import { Button } from '../../components/ui/button';
@@ -13,7 +14,6 @@ import {
 import { Input } from '../../components/ui/input';
 import { Label } from '../../components/ui/label';
 import { resetTokenSchema } from '../../lib/schemas';
-import { Link } from '@tanstack/react-router';
 
 export default function MagicLink() {
   const [isEmailSent, toggleEmailState] = useState(false);

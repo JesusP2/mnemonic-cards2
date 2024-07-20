@@ -20,7 +20,13 @@ export const profileSchema = z.object({
     .min(3, 'Username must be at least  3 character long.')
     .max(255),
   email: z.string().email().max(255).nullish(),
-  avatar: z.instanceof(File).refine((data) => data.size < 1 * 1024 * 1024, 'Exceeded file size limit (1MB).').nullish(),
+  avatar: z
+    .instanceof(File)
+    .refine(
+      (data) => data.size < 1 * 1024 * 1024,
+      'Exceeded file size limit (1MB).',
+    )
+    .nullish(),
 });
 
 export const codeSchema = z.object({
@@ -43,4 +49,4 @@ export const validateResetTokenSchema = z.object({
 
 export const magicLinkTokenSchema = z.object({
   token: z.string().max(255),
-})
+});

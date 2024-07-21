@@ -19,6 +19,12 @@ import { TypographyH4 } from '../components/ui/typography';
 import { profileQueryOptions } from '../lib/queries';
 import { queryClient } from '../lib/query-client';
 import { profileSchema } from '../lib/schemas';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '../components/ui/tooltip';
 
 export default function Profile() {
   const query = useQuery(profileQueryOptions);
@@ -45,7 +51,7 @@ export default function Profile() {
     },
     onSubmit: async (e, context) => {
       e.preventDefault();
-      const res = await fetch('/api/auth/profile', {
+      const res = await fetch('/api/account', {
         method: 'PUT',
         body: context.formData,
       });
@@ -80,9 +86,9 @@ export default function Profile() {
       <form className="grid gap-6" id={form.id} onSubmit={form.onSubmit}>
         <div>
           <label className="relative group size-[96px] block overflow-hidden  rounded-full">
-            {query.data?.avatar ? (
+            {avatar || query.data?.avatar ? (
               <img
-                src={avatar || query.data.avatar}
+                src={avatar || (query.data?.avatar as string)}
                 alt=""
                 className="size-[96px]"
               />
@@ -133,13 +139,26 @@ export default function Profile() {
           <Label htmlFor="email" className="font-medium">
             Email
           </Label>
-          <Input
-            id="email"
-            name="email"
-            placeholder={query.data?.isOauth ? '' : 'example@gmail.com'}
-            disabled={query.data?.isOauth}
-            defaultValue={fields.email.value}
-          />
+          {query.data?.isOauth ? (
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Input
+                    id="email"
+                    name="email"
+                    placeholder={query.data?.isOauth ? '' : 'example@gmail.com'}
+                    disabled={query.data?.isOauth}
+                    defaultValue={fields.email.value}
+                  />
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>You're logged in using oauth</p>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+          ) : (
+            <Input id="email" name="email" defaultValue={fields.email.value} />
+          )}
           <span className="text-muted-foreground text-xs">
             This field is private, only you can see your email.
           </span>

@@ -11,6 +11,7 @@ import type * as schema from '../db/schema';
 import type { ResetPasswordEmail } from '../emails/reset-password';
 import { createUlid } from '../lucia';
 import { sendEmail } from './email';
+import { emailRateLimiter, rateLimitFn } from './rate-limiter';
 
 export function generateTokenEndpoint(
   Template: typeof ResetPasswordEmail,
@@ -47,6 +48,10 @@ export function generateTokenEndpoint(
         expiresAt: createDate(new TimeSpan(2, 'h')).toISOString(),
       });
       const origin = c.req.header('origin') as string;
+      const { success } = await rateLimitFn(c, emailRateLimiter)
+      if (!success) {
+        return c.json({ message: 'Too many requests' }, 400);
+      }
       await sendEmail(
         submission.value.email,
         subject,

@@ -5,7 +5,7 @@ import { db } from '../db/pool';
 import type * as schema from '../db/schema';
 import { rateLimitTable } from '../db/schema';
 import { createUlid } from '../lucia';
-import { envs } from '../server-envs';
+import { getUserIp } from './get-user-ip';
 
 type Sum<A extends number, B extends number> = [
   ...ArrayOfLen<A>,
@@ -101,39 +101,41 @@ export const defaultRateLimiter = new RateLimit({
 export const authRateLimiter = new RateLimit({
   db: db,
   interval: '1h',
-  limiter: 5,
+  limiter: 10,
   prefix: 'auth_',
 });
 
 export const emailRateLimiter = new RateLimit({
   db: db,
   interval: '1h',
-  limiter: 5,
+  limiter: 10,
   prefix: 'emails_',
 });
 
 export function rateLimitMiddleware(rateLimiter = defaultRateLimiter) {
   return async (c: Context, next: Next) => {
-    const forwardedFor = c.req.header('x-forwarded-for')?.split(',')[0]?.trim();
-    const realIp = c.req.header('x-real-ip');
-
-    let ip = '';
-    if (forwardedFor) {
-      ip = forwardedFor;
-    }
-    if (realIp) {
-      ip = realIp.trim();
-    }
-    if (envs.NODE_ENV === 'development') {
-      ip = '0.0.0.0';
-    }
-    if (!ip) {
-      return c.json({ message: 'Too many requests' }, 400);
-    }
-    const { success } = await rateLimiter.limit(ip);
+    const { success } = await rateLimitFn(c, rateLimiter)
     if (!success) {
       return c.json({ message: 'Too many requests' }, 400);
     }
     return next();
   };
+}
+
+export async function rateLimitFn(c: Context, rateLimiter: RateLimit) {
+  const ip = getUserIp(c)
+  if (!ip) {
+    return  {
+      success: false
+    }
+  }
+  const { success } = await rateLimiter.limit(ip);
+  if (!success) {
+    return {
+      success: false
+    }
+  }
+  return {
+    success: true
+  }
 }

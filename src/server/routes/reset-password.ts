@@ -10,10 +10,8 @@ import { userModel } from '../data-access/users';
 import { ResetPasswordEmail } from '../emails/reset-password';
 import { hashPassword, lucia } from '../lucia';
 import { generateTokenEndpoint } from '../utils/generate-token';
-import { emailRateLimiter, rateLimitMiddleware } from '../utils/rate-limiter';
 
 export const resetPasswordRoute = new Hono();
-resetPasswordRoute.use(rateLimitMiddleware(emailRateLimiter));
 resetPasswordRoute.post(
   '/reset-password/email',
   generateTokenEndpoint(ResetPasswordEmail, 'Reset password', resetTokenModel),

@@ -23,7 +23,7 @@ export function OTPForm({
     },
     onSubmit: async (e, context) => {
       e.preventDefault();
-      const res = await fetch('/api/auth/email-verification', {
+      const res = await fetch('/api/account/email-verification', {
         method: 'POST',
         body: context.formData,
       });

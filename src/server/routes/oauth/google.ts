@@ -93,7 +93,7 @@ googleLoginRouter.get('/auth/google/callback', async (c) => {
     await createUserSession(c, userId);
     return c.redirect('/');
   } catch (err) {
-    console.log(err);
+    console.error(err);
     return c.redirect('/auth/signin');
   }
 });

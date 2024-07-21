@@ -11,7 +11,27 @@ import { createUlid, hashPassword } from '../lucia';
 import { authRateLimiter, rateLimitMiddleware } from '../utils/rate-limiter';
 
 export const authRoute = new Hono();
+
+authRoute.post('/signout', async (c) => {
+  const session = c.get('session');
+  if (!session) {
+    return c.redirect('/auth/signin');
+  }
+  await deleteUserSessions(c, session.id);
+  return c.redirect('/auth/signin');
+});
+
+authRoute.post('/signout-global', async (c) => {
+  const user = c.get('user');
+  if (!user) {
+    return c.redirect('/auth/signin');
+  }
+  await deleteAllUserSessions(c, user.id);
+  return c.redirect('/auth/signin');
+});
+
 authRoute.use(rateLimitMiddleware(authRateLimiter));
+
 authRoute.post('/signin', async (c) => {
   if (c.get('user')) {
     return c.json(null, 403);
@@ -92,22 +112,4 @@ authRoute.post('/signup', async (c) => {
       400,
     );
   }
-});
-
-authRoute.post('/signout', async (c) => {
-  const session = c.get('session');
-  if (!session) {
-    return c.redirect('/auth/signin');
-  }
-  await deleteUserSessions(c, session.id);
-  return c.redirect('/auth/signin');
-});
-
-authRoute.post('/signout-global', async (c) => {
-  const user = c.get('user');
-  if (!user) {
-    return c.redirect('/auth/signin');
-  }
-  await deleteAllUserSessions(c, user.id);
-  return c.redirect('/auth/signin');
 });

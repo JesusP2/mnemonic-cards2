@@ -16,11 +16,10 @@ import { VerifyEmail } from '../emails/verify-email';
 import { createUlid, hashPassword } from '../lucia';
 import { sendEmail } from '../utils/email';
 import { uploadFile } from '../utils/r2';
-import { emailRateLimiter, rateLimitMiddleware } from '../utils/rate-limiter';
+import { emailRateLimiter, rateLimitFn } from '../utils/rate-limiter';
 
 export const accountRoute = new Hono();
-accountRoute.use(rateLimitMiddleware(emailRateLimiter));
-accountRoute.put('/profile', async (c) => {
+accountRoute.put('/', async (c) => {
   const user = c.get('user');
   if (!user) {
     return c.json(null, 401);
@@ -38,7 +37,6 @@ accountRoute.put('/profile', async (c) => {
   if (submission.status !== 'success') {
     return c.json(submission.reply(), 400);
   }
-  console.log(submission.value);
   submission.value.email =
     submission.value.email === '' ? null : submission.value.email;
   if (user.isOauth) {
@@ -102,6 +100,10 @@ accountRoute.put('/profile', async (c) => {
       if (isEmailBeingUpdated) {
         const code = generateRandomString(6, alphabet('0-9'));
         await emailVerificationModel.deleteAllByUserId(user.id, tx);
+        const { success } = await rateLimitFn(c, emailRateLimiter)
+        if (!success) {
+          return c.json({ message: 'Too many requests' }, 400);
+        }
         await sendEmail(
           submission.value.email as string,
           'Verify email',

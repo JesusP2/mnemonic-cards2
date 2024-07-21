@@ -49,10 +49,9 @@ app.use(async (c, next) => {
   }
   return next();
 });
+app.route('/api/auth/magic-link', magicLinkRoute);
 app.route('/api/auth', authRoute);
-app.route('/api/auth', accountRoute);
-app.route('/api/auth', magicLinkRoute);
-app.route('/api/auth', magicLinkRoute);
+app.route('/api/account', accountRoute);
 app.route('/', githubLoginRouter);
 app.route('/', googleLoginRouter);
 app.get('/api/profile', async (c) => {

@@ -7,14 +7,8 @@ import { createUserSession } from '../data-access/sessions';
 import { MagicLinkEmail } from '../emails/magic-link';
 import { lucia } from '../lucia';
 import { generateTokenEndpoint } from '../utils/generate-token';
-import { emailRateLimiter, rateLimitMiddleware } from '../utils/rate-limiter';
 
 export const magicLinkRoute = new Hono();
-magicLinkRoute.use(rateLimitMiddleware(emailRateLimiter));
-magicLinkRoute.post(
-  '/magic-link/generate',
-  generateTokenEndpoint(MagicLinkEmail, 'Magic link', magicLinkModel),
-);
 
 magicLinkRoute.get('/magic-link/:token', async (c) => {
   const loggedInUser = c.get('user');
@@ -31,3 +25,8 @@ magicLinkRoute.get('/magic-link/:token', async (c) => {
   await createUserSession(c, record.userId);
   return c.redirect('/home');
 });
+
+magicLinkRoute.post(
+  '/generate',
+  generateTokenEndpoint(MagicLinkEmail, 'Magic link', magicLinkModel),
+);

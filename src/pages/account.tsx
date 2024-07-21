@@ -16,8 +16,11 @@ import { cn } from '../components/ui/utils';
 import { unselectedCss } from '../lib/constants';
 import { queryClient } from '../lib/query-client';
 import { changePasswordSchema } from '../lib/schemas';
+import { useQuery } from '@tanstack/react-query';
+import { profileQueryOptions } from '../lib/queries';
 
 export default function Account() {
+  const query = useQuery(profileQueryOptions);
   const [lastResult, setLastResult] = useState(null);
   const [isModalOpened, openModal] = useState(false);
   const [form, fields] = useForm({
@@ -31,7 +34,7 @@ export default function Account() {
     },
     onSubmit: async (e, context) => {
       e.preventDefault();
-      const res = await fetch('/api/auth/password', {
+      const res = await fetch('/api/account/password', {
         method: 'PUT',
         body: context.formData,
       });
@@ -54,46 +57,53 @@ export default function Account() {
       <p className="text-muted-foreground mt-2 text-sm">
         Update your account settings
       </p>
-      <div
-        data-orientation="horizontal"
-        className="shrink-0 bg-border h-[1px] max-w-3xl my-6"
-      />
-      <section>
-        <h5 className="text-lg font-medium">Change password</h5>
-        <form id={form.id} onSubmit={form.onSubmit}>
-          <div className="grid gap-2 max-w-3xl mt-4">
-            <Label htmlFor={fields.currentPassword.id} className="font-medium">
-              Current password
-            </Label>
-            <Input
-              className="max-w-sm"
-              id={fields.currentPassword.id}
-              name={fields.currentPassword.name}
-              defaultValue={fields.currentPassword.value}
-              type="password"
-            />
-            <span className="text-sm text-red-500">
-              {fields.currentPassword.errors}
-            </span>
-          </div>
-          <div className="grid gap-2 max-w-3xl mt-2">
-            <Label htmlFor={fields.newPassword.id} className="font-medium">
-              New password
-            </Label>
-            <Input
-              className="max-w-sm"
-              id={fields.newPassword.id}
-              name={fields.newPassword.name}
-              defaultValue={fields.newPassword.value}
-              type="password"
-            />
-            <span className="text-sm text-red-500">
-              {fields.currentPassword.errors}
-            </span>
-          </div>
-          <Button className="mt-4">Change password</Button>
-        </form>
-      </section>
+      {!query.data?.isOauth ? (
+        <>
+          <div
+            data-orientation="horizontal"
+            className="shrink-0 bg-border h-[1px] max-w-3xl my-6"
+          />
+          <section>
+            <h5 className="text-lg font-medium">Change password</h5>
+            <form id={form.id} onSubmit={form.onSubmit}>
+              <div className="grid gap-2 max-w-3xl mt-4">
+                <Label
+                  htmlFor={fields.currentPassword.id}
+                  className="font-medium"
+                >
+                  Current password
+                </Label>
+                <Input
+                  className="max-w-sm"
+                  id={fields.currentPassword.id}
+                  name={fields.currentPassword.name}
+                  defaultValue={fields.currentPassword.value}
+                  type="password"
+                />
+                <span className="text-sm text-red-500">
+                  {fields.currentPassword.errors}
+                </span>
+              </div>
+              <div className="grid gap-2 max-w-3xl mt-2">
+                <Label htmlFor={fields.newPassword.id} className="font-medium">
+                  New password
+                </Label>
+                <Input
+                  className="max-w-sm"
+                  id={fields.newPassword.id}
+                  name={fields.newPassword.name}
+                  defaultValue={fields.newPassword.value}
+                  type="password"
+                />
+                <span className="text-sm text-red-500">
+                  {fields.currentPassword.errors}
+                </span>
+              </div>
+              <Button className="mt-4">Change password</Button>
+            </form>
+          </section>
+        </>
+      ) : null}
       <div
         data-orientation="horizontal"
         className="shrink-0 bg-border h-[1px] max-w-3xl my-10"

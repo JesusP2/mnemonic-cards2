@@ -7,6 +7,7 @@ import { userModel } from '../../data-access/users.js';
 import { db } from '../../db/pool.js';
 import { oauthAccountTable } from '../../db/schema/index.js';
 import { createUlid, github } from '../../lucia.js';
+import { uploadFile } from '../../utils/r2.js';
 
 export const githubLoginRouter = new Hono();
 
@@ -52,6 +53,18 @@ githubLoginRouter.get('/auth/github/callback', async (c) => {
       return c.redirect('/');
     }
     const userId = createUlid();
+    let avatarKey = null;
+    if (githubUser.avatar_url) {
+      const pictureRes = await fetch(githubUser.avatar_url);
+      const resType = pictureRes.headers.get('Content-Type');
+      const allowedContentTypes = ['image/png', 'image/jpeg', 'image/webp'];
+      if (resType && allowedContentTypes.includes(resType)) {
+        const buf = Buffer.from(await pictureRes.arrayBuffer());
+        const extension = resType.split('/')[1];
+        avatarKey = `${createUlid()}.${extension}`;
+        await uploadFile(buf, avatarKey);
+      }
+    }
     await db.transaction(async (tx) => {
       const oauthId = createUlid();
       await tx.insert(oauthAccountTable).values({
@@ -66,7 +79,7 @@ githubLoginRouter.get('/auth/github/callback', async (c) => {
           username: githubUser.login,
           email: null,
           password: null,
-          avatar: null,
+          avatar: avatarKey,
         },
         tx,
       );
@@ -81,4 +94,6 @@ githubLoginRouter.get('/auth/github/callback', async (c) => {
 interface GitHubUser {
   id: string;
   login: string;
+  avatar_url: string;
+  email: string | null;
 }

@@ -134,6 +134,9 @@ importers:
       lz-string:
         specifier: ^1.5.0
         version: 1.5.0
+      marked:
+        specifier: ^13.0.2
+        version: 13.0.2
       oslo:
         specifier: ^1.2.0
         version: 1.2.0
@@ -3922,6 +3925,11 @@ packages:
 
   lz-string@1.5.0:
     resolution: {integrity: sha512-h5bgJWpxJNswbU7qCrV0tIKQCaS3blPDrqKWx+QxzuzL1zGUzij9XCWLrSLsJPu5t+eWA/ycetzYAO5IOMcWAQ==}
+    hasBin: true
+
+  marked@13.0.2:
+    resolution: {integrity: sha512-J6CPjP8pS5sgrRqxVRvkCIkZ6MFdRIjDkwUwgJ9nL2fbmM6qGQeB2C16hi8Cc9BOzj6xXzy0jyi0iPIfnMHYzA==}
+    engines: {node: '>= 18'}
     hasBin: true
 
   marked@7.0.4:
@@ -8680,6 +8688,8 @@ snapshots:
       react: 18.3.1
 
   lz-string@1.5.0: {}
+
+  marked@13.0.2: {}
 
   marked@7.0.4: {}
 

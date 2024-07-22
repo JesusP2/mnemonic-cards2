@@ -105,13 +105,7 @@ export default function Profile() {
               onChange={async (e) => {
                 const file = e.target.files?.[0];
                 if (!file) return;
-                const reader = new FileReader();
-                if (file) {
-                  reader.readAsDataURL(file);
-                }
-                reader.onload = () => {
-                  setAvatar(reader.result as string);
-                };
+                setAvatar(URL.createObjectURL(file));
               }}
             />
           </label>

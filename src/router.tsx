@@ -34,6 +34,12 @@ const settingsRoute = createRoute({
   component: lazyRouteComponent(() => import('./pages/settings-layout')),
 });
 
+const createCardRoute = createRoute({
+  getParentRoute: () => mainLayout,
+  path: 'create',
+  component: lazyRouteComponent(() => import('./components/create-card')),
+});
+
 const profileRoute = createRoute({
   getParentRoute: () => settingsRoute,
   path: 'profile',
@@ -97,6 +103,7 @@ const routeTree = rootRoute.addChildren([
   mainLayout.addChildren([
     homeRoute,
     settingsRoute.addChildren([profileRoute, accountRoute]),
+    createCardRoute,
   ]),
   authLayout.addChildren([
     signinRoute,

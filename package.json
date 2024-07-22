@@ -51,6 +51,7 @@
     "class-variance-authority": "^0.7.0",
     "clsx": "^2.1.1",
     "cmdk": "^1.0.0",
+    "dompurify": "^3.1.6",
     "dotenv": "^16.4.5",
     "drizzle-orm": "^0.31.2",
     "hono": "^4.4.7",
@@ -75,6 +76,8 @@
   },
   "devDependencies": {
     "@hono/vite-dev-server": "^0.12.2",
+    "@tailwindcss/typography": "^0.5.13",
+    "@types/dompurify": "^3.0.5",
     "@types/node": "^20.14.8",
     "@types/react": "^18.3.3",
     "@types/react-dom": "^18.3.0",

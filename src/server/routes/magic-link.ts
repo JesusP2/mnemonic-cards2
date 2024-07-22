@@ -10,7 +10,7 @@ import { generateTokenEndpoint } from '../utils/generate-token';
 
 export const magicLinkRoute = new Hono();
 
-magicLinkRoute.get('/magic-link/:token', async (c) => {
+magicLinkRoute.get('/:token', async (c) => {
   const loggedInUser = c.get('user');
   if (loggedInUser) {
     return c.redirect('/home');

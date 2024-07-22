@@ -50,3 +50,14 @@ export const validateResetTokenSchema = z.object({
 export const magicLinkTokenSchema = z.object({
   token: z.string().max(255),
 });
+
+export const fileSchema = z.object({
+  file: z.instanceof(File),
+  url:  z.string(),
+  key: z.string(),
+})
+
+export const  createCardSchema  = z.object({
+  markdown: z.string(),
+  files: z.array(fileSchema)
+})

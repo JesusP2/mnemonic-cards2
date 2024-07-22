@@ -1,5 +1,6 @@
 import { useForm } from '@conform-to/react';
 import { parseWithZod } from '@conform-to/zod';
+import { useQuery } from '@tanstack/react-query';
 import { Link } from '@tanstack/react-router';
 import { useState } from 'react';
 import { Button } from '../components/ui/button';
@@ -14,10 +15,9 @@ import { Label } from '../components/ui/label';
 import { TypographyH4 } from '../components/ui/typography';
 import { cn } from '../components/ui/utils';
 import { unselectedCss } from '../lib/constants';
+import { profileQueryOptions } from '../lib/queries';
 import { queryClient } from '../lib/query-client';
 import { changePasswordSchema } from '../lib/schemas';
-import { useQuery } from '@tanstack/react-query';
-import { profileQueryOptions } from '../lib/queries';
 
 export default function Account() {
   const query = useQuery(profileQueryOptions);

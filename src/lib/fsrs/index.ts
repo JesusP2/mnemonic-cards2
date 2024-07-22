@@ -1,9 +1,4 @@
-import {
-  Rating,
-  createEmptyCard,
-  fsrs,
-  generatorParameters,
-} from 'ts-fsrs';
+import { Rating, createEmptyCard, fsrs, generatorParameters } from 'ts-fsrs';
 
 const params = generatorParameters({ enable_fuzz: true });
 const f = fsrs(params);

@@ -100,7 +100,7 @@ accountRoute.put('/', async (c) => {
       if (isEmailBeingUpdated) {
         const code = generateRandomString(6, alphabet('0-9'));
         await emailVerificationModel.deleteAllByUserId(user.id, tx);
-        const { success } = await rateLimitFn(c, emailRateLimiter)
+        const { success } = await rateLimitFn(c, emailRateLimiter);
         if (!success) {
           return c.json({ message: 'Too many requests' }, 400);
         }

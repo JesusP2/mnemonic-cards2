@@ -48,7 +48,7 @@ export function generateTokenEndpoint(
         expiresAt: createDate(new TimeSpan(2, 'h')).toISOString(),
       });
       const origin = c.req.header('origin') as string;
-      const { success } = await rateLimitFn(c, emailRateLimiter)
+      const { success } = await rateLimitFn(c, emailRateLimiter);
       if (!success) {
         return c.json({ message: 'Too many requests' }, 400);
       }

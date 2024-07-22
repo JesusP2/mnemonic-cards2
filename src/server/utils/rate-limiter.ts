@@ -114,7 +114,7 @@ export const emailRateLimiter = new RateLimit({
 
 export function rateLimitMiddleware(rateLimiter = defaultRateLimiter) {
   return async (c: Context, next: Next) => {
-    const { success } = await rateLimitFn(c, rateLimiter)
+    const { success } = await rateLimitFn(c, rateLimiter);
     if (!success) {
       return c.json({ message: 'Too many requests' }, 400);
     }
@@ -123,19 +123,19 @@ export function rateLimitMiddleware(rateLimiter = defaultRateLimiter) {
 }
 
 export async function rateLimitFn(c: Context, rateLimiter: RateLimit) {
-  const ip = getUserIp(c)
+  const ip = getUserIp(c);
   if (!ip) {
-    return  {
-      success: false
-    }
+    return {
+      success: false,
+    };
   }
   const { success } = await rateLimiter.limit(ip);
   if (!success) {
     return {
-      success: false
-    }
+      success: false,
+    };
   }
   return {
-    success: true
-  }
+    success: true,
+  };
 }

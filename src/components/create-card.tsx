@@ -9,50 +9,77 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from '../components/ui/tooltip';
-import { getFormProps, getTextareaProps, useForm } from '@conform-to/react';
-import { parseWithZod } from '@conform-to/zod';
-import type  { z } from 'zod';
-import { createCardSchema, type fileSchema } from '../lib/schemas';
+import type { z } from 'zod';
+import type { fileSchema } from '../lib/schemas';
 
 type FileElement = z.infer<typeof fileSchema>;
 export default function CreateCard() {
-  const [markdownSource, setMarkdownSource] = useState('');
-  const [files, setFiles] = useState<FileElement[]>([]);
+  const [frontViewMarkdown, setFrontViewMarkdown] = useState('');
+  const [backViewMarkdown, setbackViewMarkdown] = useState('');
+  const [frontViewFiles, setFrontViewFiles] = useState<FileElement[]>([]);
+  const [backViewFiles, setBackViewFiles] = useState<FileElement[]>([]);
+  const [currentView, setCurrentView] = useState<'front' | 'back'>('front');
   const cardRef = useRef<null | HTMLDivElement>(null);
   const [cursorPosition, setCursorPosition] = useState(0);
 
-  const [lastResult, setLastResult] = useState(null);
-  const [form, fields] = useForm({
-    lastResult,
-    shouldValidate: 'onBlur',
-    shouldRevalidate: 'onBlur',
-    onValidate: ({ formData }) => {
-      return parseWithZod(formData, {
-        schema: createCardSchema
-      });
-    },
-    onSubmit: async (e, context) => {
-      e.preventDefault();
-      const res = await fetch('/api/deck/10/card', {
-        method: 'POST',
-        body: context.formData,
-      });
-      if (!res.ok) {
-        const json = await res.json();
-        setLastResult(json);
-        return;
-      }
-    },
-    defaultValue: {
-      markdown: '',
-      files: []
-    },
-  });
+  const markdown =
+    currentView === 'front' ? frontViewMarkdown : backViewMarkdown;
+  const files = currentView === 'front' ? frontViewFiles : backViewFiles;
+  function setMarkdown(str: string) {
+    return currentView === 'front'
+      ? setFrontViewMarkdown(str)
+      : setbackViewMarkdown(str);
+  }
 
-  const handleCursorPositionChange = (
+  function setFiles(
+    files: FileElement[] | ((files: FileElement[]) => FileElement[]),
+  ) {
+    return currentView === 'front'
+      ? setFrontViewFiles(files)
+      : setBackViewFiles(files);
+  }
+
+  async function onSubmit() {
+    const formData = new FormData();
+    formData.append('front_view_markdown', frontViewMarkdown);
+    formData.append('front_back_markdown', backViewMarkdown);
+    for (const file of frontViewFiles) {
+      formData.append('front_view_files', file.file);
+    }
+    for (const file of backViewFiles) {
+      formData.append('back_view_files', file.file);
+    }
+    formData.append(
+      'front_view_files_metadata',
+      JSON.stringify(frontViewFiles.map((file) => ({ url: file.url }))),
+    );
+    formData.append(
+      'back_view_files_metadata',
+      JSON.stringify(backViewFiles.map((file) => ({ url: file.url }))),
+    );
+    const res = await fetch('/api/deck/10/card', {
+      method: 'POST',
+      body: formData,
+    });
+    const data = await res.json();
+    console.log(data);
+  }
+
+  async function handleViewChange() {
+    const markdown = currentView === 'front' ? backViewMarkdown : frontViewMarkdown;
+    if (cardRef.current) {
+      const newMarkdown = DOMPurify.sanitize(await marked.parse(markdown), {
+        ALLOW_UNKNOWN_PROTOCOLS: true,
+      });
+      cardRef.current.innerHTML = newMarkdown;
+      setCurrentView(prev => prev === 'front' ? 'back' : 'front')
+    }
+  }
+
+  function handleCursorPositionChange (
     // biome-ignore lint/suspicious/noExplicitAny: <explanation>
     e: any,
-  ) => {
+  ) {
     setCursorPosition(e.target.selectionStart);
   };
 
@@ -60,7 +87,7 @@ export default function CreateCard() {
     e: React.ChangeEvent<HTMLTextAreaElement>,
   ) {
     const value = e.target.value;
-    setMarkdownSource(value);
+    setMarkdown(value);
     if (cardRef.current) {
       const newMarkdown = DOMPurify.sanitize(await marked.parse(value), {
         ALLOW_UNKNOWN_PROTOCOLS: true,
@@ -75,55 +102,55 @@ export default function CreateCard() {
     const file = e.target.files?.[0];
     if (file && cardRef.current) {
       const fileTempUrl = URL.createObjectURL(file);
-      const fileKey = fileTempUrl.split('/')[fileTempUrl.split('/').length - 1];
-      const newValuePart1 = markdownSource.slice(0, cursorPosition);
-      const newValuePart2 = markdownSource.slice(cursorPosition);
+      const newValuePart1 = markdown.slice(0, cursorPosition);
+      const newValuePart2 = markdown.slice(cursorPosition);
       const newValue = `${newValuePart1}
 ![image info](${fileTempUrl})
 ${newValuePart2}`;
 
-      setMarkdownSource(newValue);
+      setMarkdown(newValue);
       const newMarkdown = DOMPurify.sanitize(await marked.parse(newValue), {
         ALLOW_UNKNOWN_PROTOCOLS: true,
       });
       cardRef.current.innerHTML = newMarkdown;
-      setFiles((prev) => [
-        ...prev,
-        { file, url: fileTempUrl, key: fileKey as string },
-      ]);
+      setFiles((prev) => [...prev, { file, url: fileTempUrl }]);
     }
   };
   return (
-    <div className="flex h-[calc(100vh-96px)] gap-x-[10px]">
+    <div className="flex h-[calc(100vh-97px)] gap-x-[10px]">
       <div className="w-[calc(50%-5px)] h-full relative">
-        <form {...getFormProps(form)}>
-          <div className="absolute top-0 right-0 flex p-2 items-center gap-x-2">
-            <Button size="sm" className="p-2 py-0 h-7">
-              Create
-            </Button>
-            <TooltipProvider>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <label className="hover:text-foreground/70">
-                    <Image size={33} />
-                    <input type="file" onChange={handleFileChange} hidden />
-                  </label>
-                </TooltipTrigger>
-                <TooltipContent>
-                  <p>Attach image</p>
-                </TooltipContent>
-              </Tooltip>
-            </TooltipProvider>
-          </div>
-          <textarea
-            value={markdownSource}
-            onChange={onTextareaValueChange}
-            onClick={handleCursorPositionChange}
-            onKeyUp={handleCursorPositionChange}
-            {...getTextareaProps(fields.markdown)}
-            className="w-full h-full bg-background outline-none border border-zinc-700 rounded-sm p-2"
-          />
-        </form>
+        <div className="absolute top-0 right-0 flex p-2 items-center gap-x-2">
+          <Button onClick={onSubmit} size="sm" className="p-2 py-0 h-7">
+            Create
+          </Button>
+          <Button
+            onClick={handleViewChange}
+            size="sm"
+            className="p-2 py-0 h-7"
+          >
+            Switch view
+          </Button>
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild type="button">
+                <label className="hover:text-foreground/70">
+                  <Image size={33} />
+                  <input type="file" onChange={handleFileChange} hidden />
+                </label>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p>Attach image</p>
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+        </div>
+        <textarea
+          value={markdown}
+          onChange={onTextareaValueChange}
+          onClick={handleCursorPositionChange}
+          onKeyUp={handleCursorPositionChange}
+          className="w-full resize-none h-full bg-background outline-none border border-zinc-700 rounded-sm p-2"
+        />
       </div>
       <div
         ref={cardRef}

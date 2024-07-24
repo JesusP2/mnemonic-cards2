@@ -12,26 +12,32 @@ const rootRoute = createRootRoute({});
 
 const mainLayout = createRoute({
   getParentRoute: () => rootRoute,
-  path: '/',
+  path: '_',
   beforeLoad: async () => {
     const profile = await queryClient.fetchQuery(profileQueryOptions);
     if (!profile) {
       throw redirect({ to: '/auth/signin' });
     }
   },
-  component: lazyRouteComponent(() => import('./pages/main-layout')),
+  component: lazyRouteComponent(() => import('./pages/main/layout')),
+});
+
+const landingRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/',
+  component: lazyRouteComponent(() => import('./pages/landing')),
 });
 
 const homeRoute = createRoute({
   getParentRoute: () => mainLayout,
   path: 'home',
-  component: lazyRouteComponent(() => import('./pages/home')),
+  component: lazyRouteComponent(() => import('./pages/main/home')),
 });
 
 const settingsRoute = createRoute({
   getParentRoute: () => mainLayout,
   path: 'settings',
-  component: lazyRouteComponent(() => import('./pages/settings-layout')),
+  component: lazyRouteComponent(() => import('./pages/settings/layout')),
 });
 
 const createCardRoute = createRoute({
@@ -43,13 +49,13 @@ const createCardRoute = createRoute({
 const profileRoute = createRoute({
   getParentRoute: () => settingsRoute,
   path: 'profile',
-  component: lazyRouteComponent(() => import('./pages/profile')),
+  component: lazyRouteComponent(() => import('./pages/settings/profile')),
 });
 
 const accountRoute = createRoute({
   getParentRoute: () => settingsRoute,
   path: 'account',
-  component: lazyRouteComponent(() => import('./pages/account')),
+  component: lazyRouteComponent(() => import('./pages/settings/account')),
 });
 
 const authLayout = createRoute({
@@ -61,7 +67,7 @@ const authLayout = createRoute({
       throw redirect({ to: '/home' });
     }
   },
-  component: lazyRouteComponent(() => import('./pages/auth-layout')),
+  component: lazyRouteComponent(() => import('./pages/auth/layout')),
 });
 
 const signinRoute = createRoute({
@@ -100,6 +106,7 @@ export const resetPasswordRoute = createRoute({
 });
 
 const routeTree = rootRoute.addChildren([
+  landingRoute,
   mainLayout.addChildren([
     homeRoute,
     settingsRoute.addChildren([profileRoute, accountRoute]),

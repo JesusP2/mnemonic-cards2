@@ -11,6 +11,7 @@ import { githubLoginRouter } from './routes/oauth/github';
 import { googleLoginRouter } from './routes/oauth/google';
 import { checkUserLogin } from './utils/check-user';
 import { createPresignedUrl } from './utils/r2';
+import { deckRoute } from './routes/deck';
 
 const isProd = process.env.NODE_ENV === 'production';
 let html = await readFile(isProd ? 'build/index.html' : 'index.html', 'utf8');
@@ -52,6 +53,7 @@ app.use(async (c, next) => {
 app.route('/api/auth/magic-link', magicLinkRoute);
 app.route('/api/auth', authRoute);
 app.route('/api/account', accountRoute);
+app.route('/api/deck', deckRoute);
 app.route('/', githubLoginRouter);
 app.route('/', googleLoginRouter);
 app.get('/api/profile', async (c) => {

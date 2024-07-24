@@ -1,8 +1,8 @@
 import { useQuery } from '@tanstack/react-query';
 import { Link, Outlet } from '@tanstack/react-router';
-import { ModeToggle } from '../components/theme-switch';
-import { UserDropdown } from '../components/user-dropdown';
-import { profileQueryOptions } from '../lib/queries';
+import { ModeToggle } from '../../components/theme-switch';
+import { UserDropdown } from '../../components/user-dropdown';
+import { profileQueryOptions } from '../../lib/queries';
 
 export default function Layout() {
   const profile = useQuery(profileQueryOptions);

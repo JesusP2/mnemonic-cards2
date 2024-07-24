@@ -3,21 +3,21 @@ import { parseWithZod } from '@conform-to/zod';
 import { useQuery } from '@tanstack/react-query';
 import { Link } from '@tanstack/react-router';
 import { useState } from 'react';
-import { Button } from '../components/ui/button';
+import { Button } from '../../components/ui/button';
 import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
-} from '../components/ui/dialog';
-import { Input } from '../components/ui/input';
-import { Label } from '../components/ui/label';
-import { TypographyH4 } from '../components/ui/typography';
-import { cn } from '../components/ui/utils';
-import { unselectedCss } from '../lib/constants';
-import { profileQueryOptions } from '../lib/queries';
-import { queryClient } from '../lib/query-client';
-import { changePasswordSchema } from '../lib/schemas';
+} from '../../components/ui/dialog';
+import { Input } from '../../components/ui/input';
+import { Label } from '../../components/ui/label';
+import { TypographyH4 } from '../../components/ui/typography';
+import { cn } from '../../components/ui/utils';
+import { unselectedCss } from '../../lib/constants';
+import { profileQueryOptions } from '../../lib/queries';
+import { queryClient } from '../../lib/query-client';
+import { changePasswordSchema } from '../../lib/schemas';
 
 export default function Account() {
   const query = useQuery(profileQueryOptions);
@@ -135,3 +135,4 @@ export default function Account() {
     </>
   );
 }
+

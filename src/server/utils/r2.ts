@@ -23,8 +23,7 @@ export async function uploadFile(buffer: Buffer, name: string) {
   });
 
   await client.send(command);
-  const url = await createPresignedUrl(name);
-  return url;
+  return name;
 }
 
 export async function createPresignedUrl(key: string) {

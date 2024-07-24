@@ -1,0 +1,1 @@
+ALTER TABLE `card` ADD `back_markdown` text;

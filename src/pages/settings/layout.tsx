@@ -1,6 +1,6 @@
 import { Link, Outlet, useLocation } from '@tanstack/react-router';
-import { TypographyH3 } from '../components/ui/typography';
-import { selectedCss, unselectedCss } from '../lib/constants';
+import { TypographyH3 } from '../../components/ui/typography';
+import { selectedCss, unselectedCss } from '../../lib/constants';
 
 export default function Settings() {
   const location = useLocation();

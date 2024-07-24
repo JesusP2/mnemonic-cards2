@@ -38,10 +38,11 @@ export const cardTable = sqliteTable('card', {
   deckId: text('deck_id')
     .notNull()
     .references(() => deckTable.id, { onDelete: 'cascade' }),
-  frontImageKey: text('front_image_key'),
-  frontText: text('front_text'),
-  backImageKey: text('back_image_key'),
-  backText: text('back_text'),
+  frontMarkdown: text('front_markdown'),
+  backMarkdown: text('back_markdown'),
+  frontFiles: text('front_files'),
+  backFiles: text('back_files'),
+  fileKeys: text('file_keys'),
   createdAt: text('created_at').$defaultFn(() => new Date().toISOString()),
   updatedAt: text('updated_at').$defaultFn(() => new Date().toISOString()),
 });

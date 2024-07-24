@@ -56,6 +56,7 @@
     "drizzle-orm": "^0.31.2",
     "hono": "^4.4.7",
     "input-otp": "^1.2.4",
+    "jsdom": "^24.1.1",
     "lucia": "^3.2.0",
     "lucide-react": "^0.383.0",
     "lz-string": "^1.5.0",
@@ -77,7 +78,9 @@
   "devDependencies": {
     "@hono/vite-dev-server": "^0.12.2",
     "@tailwindcss/typography": "^0.5.13",
+    "@tanstack/router-plugin": "^1.45.8",
     "@types/dompurify": "^3.0.5",
+    "@types/jsdom": "^21.1.7",
     "@types/node": "^20.14.8",
     "@types/react": "^18.3.3",
     "@types/react-dom": "^18.3.0",

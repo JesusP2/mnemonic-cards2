@@ -56,7 +56,7 @@ googleLoginRouter.get('/auth/google/callback', async (c) => {
       );
     if (existingUser) {
       await createUserSession(c, existingUser.userId);
-      return c.redirect('/');
+      return c.redirect('/me');
     }
     let avatarKey = null;
     if (googleUser.picture) {
@@ -91,7 +91,7 @@ googleLoginRouter.get('/auth/google/callback', async (c) => {
       );
     });
     await createUserSession(c, userId);
-    return c.redirect('/');
+    return c.redirect('/me');
   } catch (err) {
     console.error(err);
     return c.redirect('/auth/signin');

@@ -1,32 +1,37 @@
+import { createFileRoute } from '@tanstack/react-router'
 import { useForm } from '@conform-to/react';
 import { parseWithZod } from '@conform-to/zod';
 import { useQuery } from '@tanstack/react-query';
 import { CircleUser } from 'lucide-react';
 import { useState } from 'react';
 import { z } from 'zod';
-import { OTPForm } from '../../components/form-otp';
-import { Button } from '../../components/ui/button';
+import { OTPForm } from '../components/form-otp';
+import { Button } from '../components/ui/button';
 import {
   Dialog,
   DialogContent,
   DialogDescription,
   DialogHeader,
   DialogTitle,
-} from '../../components/ui/dialog';
-import { Input } from '../../components/ui/input';
-import { Label } from '../../components/ui/label';
+} from '../components/ui/dialog';
+import { Input } from '../components/ui/input';
+import { Label } from '../components/ui/label';
 import {
   Tooltip,
   TooltipContent,
   TooltipProvider,
   TooltipTrigger,
-} from '../../components/ui/tooltip';
-import { TypographyH4 } from '../../components/ui/typography';
-import { profileQueryOptions } from '../../lib/queries';
-import { queryClient } from '../../lib/query-client';
-import { profileSchema } from '../../lib/schemas';
+} from '../components/ui/tooltip';
+import { TypographyH4 } from '../components/ui/typography';
+import { profileQueryOptions } from '../lib/queries';
+import { queryClient } from '../lib/query-client';
+import { profileSchema } from '../lib/schemas';
 
-export default function Profile() {
+export const Route = createFileRoute('/_main/settings/profile')({
+  component: Profile,
+})
+
+function Profile() {
   const query = useQuery(profileQueryOptions);
   const [avatar, setAvatar] = useState<null | string>(null);
   const [isEmailVerificationDialogOpen, openEmailVerificationDialog] =

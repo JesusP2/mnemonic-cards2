@@ -1,8 +1,14 @@
+import { createFileRoute, redirect } from '@tanstack/react-router';
 import { Link, Outlet, useLocation } from '@tanstack/react-router';
-import { TypographyH3 } from '../../components/ui/typography';
-import { selectedCss, unselectedCss } from '../../lib/constants';
+import { TypographyH3 } from '../components/ui/typography';
+import { selectedCss, unselectedCss } from '../lib/constants';
 
-export default function Settings() {
+export const Route = createFileRoute('/_main/settings')({
+  component: Settings,
+});
+
+
+function Settings() {
   const location = useLocation();
   return (
     <>
@@ -35,7 +41,7 @@ export default function Settings() {
             >
               Account
             </Link>
-            <Link className={unselectedCss} to="/home">
+            <Link className={unselectedCss} to="/me">
               Go back
             </Link>
           </nav>

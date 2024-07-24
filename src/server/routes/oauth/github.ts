@@ -50,7 +50,7 @@ githubLoginRouter.get('/auth/github/callback', async (c) => {
       );
     if (existingUser) {
       await createUserSession(c, existingUser.userId);
-      return c.redirect('/');
+      return c.redirect('/me');
     }
     const userId = createUlid();
     let avatarKey = null;
@@ -85,7 +85,7 @@ githubLoginRouter.get('/auth/github/callback', async (c) => {
       );
     });
     await createUserSession(c, userId);
-    return c.redirect('/');
+    return c.redirect('/me');
   } catch (e) {
     return c.redirect('/auth/signin');
   }

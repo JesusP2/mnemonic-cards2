@@ -1,22 +1,27 @@
+import { createFileRoute } from '@tanstack/react-router'
 import { useForm } from '@conform-to/react';
 import { parseWithZod } from '@conform-to/zod';
 import { Link, useNavigate } from '@tanstack/react-router';
 import { useState } from 'react';
 import { LuEye, LuEyeOff } from 'react-icons/lu';
-import { Button } from '../../components//ui/button';
+import { Button } from '../components//ui/button';
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from '../../components/ui/card';
-import { Input } from '../../components/ui/input';
-import { Label } from '../../components/ui/label';
-import { queryClient } from '../../lib/query-client';
-import { signupSchema } from '../../lib/schemas';
+} from '../components/ui/card';
+import { Input } from '../components/ui/input';
+import { Label } from '../components/ui/label';
+import { queryClient } from '../lib/query-client';
+import { signupSchema } from '../lib/schemas';
 
-export default function SignupForm() {
+export const Route = createFileRoute('/auth/signup')({
+  component: SignupForm,
+})
+
+function SignupForm() {
   const navigate = useNavigate({ from: '/auth/signup' });
   const [viewPass, setViewPass] = useState(false);
   const [lastResult, setLastResult] = useState(null);
@@ -39,7 +44,7 @@ export default function SignupForm() {
         return;
       }
       await queryClient.invalidateQueries();
-      navigate({ to: '/home' });
+      navigate({ to: '/me' });
     },
     defaultValue: {
       username: '',

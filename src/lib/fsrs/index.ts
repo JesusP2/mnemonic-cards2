@@ -6,7 +6,7 @@ const firstPassTime = new Date(); // new Date();
 const cardFirstPass = createEmptyCard(firstPassTime); // createEmptyCard();
 const schedulingCardsFirstPass = f.repeat(cardFirstPass, firstPassTime);
 
-console.log(cardFirstPass);
+console.log(cardFirstPass.difficulty);
 {
   // user selected hard
   const { card: cardFirstResult } = schedulingCardsFirstPass[Rating.Hard];

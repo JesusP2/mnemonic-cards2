@@ -1,16 +1,30 @@
+import { createFileRoute, redirect } from '@tanstack/react-router'
 import { useQuery } from '@tanstack/react-query';
 import { Link, Outlet } from '@tanstack/react-router';
-import { ModeToggle } from '../../components/theme-switch';
-import { UserDropdown } from '../../components/user-dropdown';
-import { profileQueryOptions } from '../../lib/queries';
+import { ModeToggle } from '../components/theme-switch';
+import { UserDropdown } from '../components/user-dropdown';
+import { profileQueryOptions } from '../lib/queries';
+import { queryClient } from '../lib/query-client';
 
-export default function Layout() {
+export const Route = createFileRoute('/_main')({
+  component: Layout,
+  beforeLoad: async () => {
+    const profile = await queryClient.fetchQuery(profileQueryOptions);
+    if (!profile) {
+      throw redirect({ to: '/auth/signin' });
+    }
+  },
+})
+
+
+function Layout() {
   const profile = useQuery(profileQueryOptions);
+  console.log(profile.data)
   return (
     <>
       <nav className="h-12 w-full">
         <div className="flex items-center justify-between gap-x-4 max-w-7xl h-12 mx-auto px-6">
-          <Link to="/home">
+          <Link to="/me">
             <img src="/vite.svg" alt="icon" />
           </Link>
           <div className="flex items-center gap-6">

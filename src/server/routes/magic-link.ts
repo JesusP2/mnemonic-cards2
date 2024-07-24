@@ -13,7 +13,7 @@ export const magicLinkRoute = new Hono();
 magicLinkRoute.get('/:token', async (c) => {
   const loggedInUser = c.get('user');
   if (loggedInUser) {
-    return c.redirect('/home');
+    return c.redirect('/me');
   }
   const token = c.req.param('token');
   const tokenHash = encodeHex(await sha256(new TextEncoder().encode(token)));
@@ -23,7 +23,7 @@ magicLinkRoute.get('/:token', async (c) => {
   }
   await lucia.invalidateUserSessions(record.userId);
   await createUserSession(c, record.userId);
-  return c.redirect('/home');
+  return c.redirect('/me');
 });
 
 magicLinkRoute.post(

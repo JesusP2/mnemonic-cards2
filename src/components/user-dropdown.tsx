@@ -39,7 +39,7 @@ export function UserDropdown({
         <DropdownMenuLabel>{user.username}</DropdownMenuLabel>
         <p className="text-muted-foreground text-xs px-2">{user.email}</p>
         <DropdownMenuSeparator />
-        <Link to="/home">
+        <Link to="/me">
           <DropdownMenuItem className="flex gap-x-2">
             <Home size={15} />
             Home

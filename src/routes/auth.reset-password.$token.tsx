@@ -1,22 +1,27 @@
+import { createFileRoute } from '@tanstack/react-router'
 import { useForm } from '@conform-to/react';
 import { parseWithZod } from '@conform-to/zod';
 import { useNavigate, useParams } from '@tanstack/react-router';
 import { useState } from 'react';
 import { LuEye, LuEyeOff } from 'react-icons/lu';
-import { Button } from '../../components/ui/button';
+import { Button } from '../components/ui/button';
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from '../../components/ui/card';
-import { Input } from '../../components/ui/input';
-import { Label } from '../../components/ui/label';
-import { queryClient } from '../../lib/query-client';
-import { validateResetTokenSchema } from '../../lib/schemas';
+} from '../components/ui/card';
+import { Input } from '../components/ui/input';
+import { Label } from '../components/ui/label';
+import { queryClient } from '../lib/query-client';
+import { validateResetTokenSchema } from '../lib/schemas';
 
-export default function ResetPasswordToken() {
+export const Route = createFileRoute('/auth/reset-password/$token')({
+  component: ResetPasswordToken,
+})
+
+function ResetPasswordToken() {
   const navigate = useNavigate({ from: '/auth/reset-password/$token' });
   const params = useParams({ from: '/auth/reset-password/$token' });
   const [viewPass, setViewPass] = useState(false);
@@ -43,7 +48,7 @@ export default function ResetPasswordToken() {
         return;
       }
       await queryClient.invalidateQueries();
-      navigate({ to: '/home' });
+      navigate({ to: '/me' });
     },
     defaultValue: {
       password: '',

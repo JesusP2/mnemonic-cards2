@@ -1,20 +1,25 @@
+import { createFileRoute } from '@tanstack/react-router'
 import { useForm } from '@conform-to/react';
 import { parseWithZod } from '@conform-to/zod';
 import { CircleCheckBig } from 'lucide-react';
 import { useState } from 'react';
-import { Button } from '../../components/ui/button';
+import { Button } from '../components/ui/button';
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from '../../components/ui/card';
-import { Input } from '../../components/ui/input';
-import { Label } from '../../components/ui/label';
-import { resetTokenSchema } from '../../lib/schemas';
+} from '../components/ui/card';
+import { Input } from '../components/ui/input';
+import { Label } from '../components/ui/label';
+import { resetTokenSchema } from '../lib/schemas';
 
-export default function ForgotPassword() {
+export const Route = createFileRoute('/auth/forgot-password')({
+  component: ForgotPassword,
+})
+
+function ForgotPassword() {
   const [isEmailSent, toggleEmailState] = useState(false);
   const [lastResult, setLastResult] = useState(null);
   const [form, fields] = useForm({

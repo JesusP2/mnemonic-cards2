@@ -5,7 +5,6 @@ const f = fsrs(params);
 const firstPassTime = new Date(); // new Date();
 const cardFirstPass = createEmptyCard(firstPassTime); // createEmptyCard();
 const schedulingCardsFirstPass = f.repeat(cardFirstPass, firstPassTime);
-
 console.log(cardFirstPass.difficulty);
 {
   // user selected hard

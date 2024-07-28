@@ -62,7 +62,6 @@ export default function CreateCard() {
       body: formData,
     });
     const data = await res.json();
-    console.log(data);
   }
 
   async function handleViewChange() {

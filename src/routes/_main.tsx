@@ -19,7 +19,6 @@ export const Route = createFileRoute('/_main')({
 
 function Layout() {
   const profile = useQuery(profileQueryOptions);
-  console.log(profile.data)
   return (
     <>
       <nav className="h-12 w-full">

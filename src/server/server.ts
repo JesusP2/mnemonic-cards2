@@ -65,7 +65,6 @@ app.get('/api/profile', async (c) => {
   if (user.avatar) {
     url = await createPresignedUrl(user.avatar);
   }
-  console.log(user)
   return c.json({
     email: user.email,
     username: user.username,

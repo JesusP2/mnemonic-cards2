@@ -34,7 +34,12 @@ const MainSettingsProfileLazyImport = createFileRoute(
 const MainSettingsAccountLazyImport = createFileRoute(
   '/_main/settings/account',
 )()
-const MainDeckDeckIdLazyImport = createFileRoute('/_main/deck/$deckId')()
+const MainDeckDeckIdStudyLazyImport = createFileRoute(
+  '/_main/deck/$deckId/study',
+)()
+const MainDeckDeckIdCardLazyImport = createFileRoute(
+  '/_main/deck/$deckId/card',
+)()
 
 // Create/Update Routes
 
@@ -112,11 +117,18 @@ const MainSettingsAccountLazyRoute = MainSettingsAccountLazyImport.update({
   import('./routes/_main.settings.account.lazy').then((d) => d.Route),
 )
 
-const MainDeckDeckIdLazyRoute = MainDeckDeckIdLazyImport.update({
-  path: '/deck/$deckId',
+const MainDeckDeckIdStudyLazyRoute = MainDeckDeckIdStudyLazyImport.update({
+  path: '/deck/$deckId/study',
   getParentRoute: () => MainRoute,
 } as any).lazy(() =>
-  import('./routes/_main.deck.$deckId.lazy').then((d) => d.Route),
+  import('./routes/_main.deck.$deckId.study.lazy').then((d) => d.Route),
+)
+
+const MainDeckDeckIdCardLazyRoute = MainDeckDeckIdCardLazyImport.update({
+  path: '/deck/$deckId/card',
+  getParentRoute: () => MainRoute,
+} as any).lazy(() =>
+  import('./routes/_main.deck.$deckId.card.lazy').then((d) => d.Route),
 )
 
 // Populate the FileRoutesByPath interface
@@ -186,13 +198,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthSignupLazyImport
       parentRoute: typeof AuthImport
     }
-    '/_main/deck/$deckId': {
-      id: '/_main/deck/$deckId'
-      path: '/deck/$deckId'
-      fullPath: '/deck/$deckId'
-      preLoaderRoute: typeof MainDeckDeckIdLazyImport
-      parentRoute: typeof MainImport
-    }
     '/_main/settings/account': {
       id: '/_main/settings/account'
       path: '/account'
@@ -214,6 +219,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthResetPasswordTokenLazyImport
       parentRoute: typeof AuthImport
     }
+    '/_main/deck/$deckId/card': {
+      id: '/_main/deck/$deckId/card'
+      path: '/deck/$deckId/card'
+      fullPath: '/deck/$deckId/card'
+      preLoaderRoute: typeof MainDeckDeckIdCardLazyImport
+      parentRoute: typeof MainImport
+    }
+    '/_main/deck/$deckId/study': {
+      id: '/_main/deck/$deckId/study'
+      path: '/deck/$deckId/study'
+      fullPath: '/deck/$deckId/study'
+      preLoaderRoute: typeof MainDeckDeckIdStudyLazyImport
+      parentRoute: typeof MainImport
+    }
   }
 }
 
@@ -227,7 +246,8 @@ export const routeTree = rootRoute.addChildren({
       MainSettingsAccountLazyRoute,
       MainSettingsProfileLazyRoute,
     }),
-    MainDeckDeckIdLazyRoute,
+    MainDeckDeckIdCardLazyRoute,
+    MainDeckDeckIdStudyLazyRoute,
   }),
   AuthRoute: AuthRoute.addChildren({
     AuthForgotPasswordLazyRoute,
@@ -259,7 +279,8 @@ export const routeTree = rootRoute.addChildren({
       "children": [
         "/_main/me",
         "/_main/settings",
-        "/_main/deck/$deckId"
+        "/_main/deck/$deckId/card",
+        "/_main/deck/$deckId/study"
       ]
     },
     "/auth": {
@@ -300,10 +321,6 @@ export const routeTree = rootRoute.addChildren({
       "filePath": "auth.signup.lazy.tsx",
       "parent": "/auth"
     },
-    "/_main/deck/$deckId": {
-      "filePath": "_main.deck.$deckId.lazy.tsx",
-      "parent": "/_main"
-    },
     "/_main/settings/account": {
       "filePath": "_main.settings.account.lazy.tsx",
       "parent": "/_main/settings"
@@ -315,6 +332,14 @@ export const routeTree = rootRoute.addChildren({
     "/auth/reset-password/$token": {
       "filePath": "auth.reset-password.$token.lazy.tsx",
       "parent": "/auth"
+    },
+    "/_main/deck/$deckId/card": {
+      "filePath": "_main.deck.$deckId.card.lazy.tsx",
+      "parent": "/_main"
+    },
+    "/_main/deck/$deckId/study": {
+      "filePath": "_main.deck.$deckId.study.lazy.tsx",
+      "parent": "/_main"
     }
   }
 }

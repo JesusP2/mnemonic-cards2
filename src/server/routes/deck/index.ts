@@ -2,14 +2,14 @@ import { parseWithZod } from "@conform-to/zod";
 import DOMPurify from "dompurify";
 import { Hono } from "hono";
 import { JSDOM } from "jsdom";
-import { createEmptyCard } from "ts-fsrs";
+import { createEmptyCard, Rating } from "ts-fsrs";
 import { createDeckSchema } from "../../../lib/schemas";
 import type { Result } from "../../../lib/types";
 import { db } from "../../db/pool";
 import { cardTable, deckTable } from "../../db/schema";
 import { createUlid } from "../../lucia";
 import { uploadFile as uploadFileToR2 } from "../../utils/r2";
-import { eq } from "drizzle-orm";
+import { sql } from "drizzle-orm";
 
 const { window } = new JSDOM("<!DOCTYPE html>");
 const domPurify = DOMPurify(window);
@@ -86,6 +86,7 @@ deckRoute.post("/:deckId/card", async (c) => {
     .filter((key) => key.status === "fulfilled")
     .map((key) => key.value);
   const emptyCard = createEmptyCard();
+  emptyCard.difficulty = Rating.Again;
   await db.insert(cardTable).values({
     id: createUlid(),
     deckId: c.req.param("deckId"),
@@ -101,27 +102,20 @@ deckRoute.post("/:deckId/card", async (c) => {
 });
 
 deckRoute.get("/", async (c) => {
-  console.log('hit decks')
   const loggedInUser = c.get("user");
   if (!loggedInUser) {
     return c.json(null, 403);
   }
-  const decks = await db
-    .select({
-      id: deckTable.id,
-      name: deckTable.name,
-    })
-    .from(deckTable)
-    .where(eq(deckTable.userId, loggedInUser.id));
-  const yo = decks.map((deck) => ({
-    name: deck.name,
-    id: deck.id,
-    easy: 0,
-    good: 0,
-    hard: 0,
-    again: 0,
-  }));
-  return c.json(yo);
+  const statement = sql`SELECT ${deckTable.name} AS name, ${deckTable.id} AS id,
+  SUM(CASE WHEN ${cardTable.difficulty} = 4 THEN 1 ELSE 0 END) AS easy,
+  SUM(CASE WHEN ${cardTable.difficulty} = 3 THEN 1 ELSE 0 END) AS good,
+  SUM(CASE WHEN ${cardTable.difficulty} = 2 THEN 1 ELSE 0 END) AS hard,
+  SUM(CASE WHEN ${cardTable.difficulty} = 1 THEN 1 ELSE 0 END) AS again
+  FROM ${deckTable} LEFT JOIN ${cardTable} ON ${deckTable.id} = ${cardTable.deckId}
+  WHERE ${deckTable.userId} = ${loggedInUser.id}
+  GROUP BY ${deckTable.id}`;
+  const res = await db.run(statement)
+  return c.json(res.rows);
 });
 
 deckRoute.post("/", async (c) => {

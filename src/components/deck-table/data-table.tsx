@@ -44,7 +44,7 @@ export const columns: ColumnDef<UserDeckDashboard>[] = [
     header: () => <span>Deck name</span>,
     cell: ({ row }) => (
       <Link
-        to="/deck/$deckId"
+        to="/deck/$deckId/study"
         params={{ deckId: row.original.id }}
         className="capitalize"
       >
@@ -72,7 +72,6 @@ export const columns: ColumnDef<UserDeckDashboard>[] = [
     id: 'actions',
     enableHiding: false,
     cell: ({ row }) => {
-      const deck = row.original;
       return (
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
@@ -83,14 +82,17 @@ export const columns: ColumnDef<UserDeckDashboard>[] = [
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
             <DropdownMenuLabel>Actions</DropdownMenuLabel>
-            <DropdownMenuItem
-              onClick={() => navigator.clipboard.writeText(deck.id)}
-            >
-              Copy payment ID
+            <DropdownMenuItem>Rename deck</DropdownMenuItem>
+            <DropdownMenuItem asChild>
+              <Link
+                to="/deck/$deckId/card"
+                params={{ deckId: row.original.id }}
+              >
+                Add card
+              </Link>
             </DropdownMenuItem>
             <DropdownMenuSeparator />
-            <DropdownMenuItem>View customer</DropdownMenuItem>
-            <DropdownMenuItem>View payment details</DropdownMenuItem>
+            <DropdownMenuItem>Delete deck</DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
       );
@@ -181,9 +183,9 @@ export function DataTableDemo() {
                       {header.isPlaceholder
                         ? null
                         : flexRender(
-                            header.column.columnDef.header,
-                            header.getContext(),
-                          )}
+                          header.column.columnDef.header,
+                          header.getContext(),
+                        )}
                     </TableHead>
                   );
                 })}

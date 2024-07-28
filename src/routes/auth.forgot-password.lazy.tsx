@@ -1,7 +1,6 @@
-import { createFileRoute } from '@tanstack/react-router'
 import { useForm } from '@conform-to/react';
 import { parseWithZod } from '@conform-to/zod';
-import { Link } from '@tanstack/react-router';
+import { createLazyFileRoute } from '@tanstack/react-router';
 import { CircleCheckBig } from 'lucide-react';
 import { useState } from 'react';
 import { Button } from '../components/ui/button';
@@ -16,11 +15,11 @@ import { Input } from '../components/ui/input';
 import { Label } from '../components/ui/label';
 import { resetTokenSchema } from '../lib/schemas';
 
-export const Route = createFileRoute('/auth/magic-link')({
-  component: MagicLink,
-})
+export const Route = createLazyFileRoute('/auth/forgot-password')({
+  component: ForgotPassword,
+});
 
-function MagicLink() {
+function ForgotPassword() {
   const [isEmailSent, toggleEmailState] = useState(false);
   const [lastResult, setLastResult] = useState(null);
   const [form, fields] = useForm({
@@ -32,7 +31,7 @@ function MagicLink() {
     },
     onSubmit: async (e, context) => {
       e.preventDefault();
-      const res = await fetch('/api/auth/magic-link/generate', {
+      const res = await fetch('/api/auth/reset-password/email', {
         method: 'POST',
         body: context.formData,
       });
@@ -64,10 +63,10 @@ function MagicLink() {
     <Card className="max-w-sm">
       <CardHeader>
         <CardTitle className="text-2xl text-center">
-          Sigin with magic link
+          Email verification
         </CardTitle>
         <CardDescription className="text-center">
-          Introduce an email to send a magic link
+          Introduce an email to send a verification token
         </CardDescription>
       </CardHeader>
       <CardContent>
@@ -85,11 +84,6 @@ function MagicLink() {
             <span className="text-sm text-red-500">{fields.email.errors}</span>
           </div>
           <Button className="w-full mt-8">Send email</Button>
-          <div className="mt-4 text-center text-sm">
-            <Link to="/auth/signin" className="underline">
-              Sign in with other options
-            </Link>
-          </div>
         </form>
       </CardContent>
     </Card>

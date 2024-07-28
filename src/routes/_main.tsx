@@ -1,21 +1,28 @@
-import { createFileRoute, redirect } from '@tanstack/react-router'
 import { useQuery } from '@tanstack/react-query';
+import { createFileRoute, defer, redirect } from '@tanstack/react-router';
 import { Link, Outlet } from '@tanstack/react-router';
 import { ModeToggle } from '../components/theme-switch';
 import { UserDropdown } from '../components/user-dropdown';
-import { profileQueryOptions } from '../lib/queries';
+import { profileQueryOptions, userDecksQueryOptions } from '../lib/queries';
 import { queryClient } from '../lib/query-client';
 
 export const Route = createFileRoute('/_main')({
   component: Layout,
   beforeLoad: async () => {
-    const profile = await queryClient.fetchQuery(profileQueryOptions);
+    // artificial delay to avoid race condition.
+    // queryClient doesnt hydrate from localStorage fast enough causing the profileQueryOptions to fire.
+    await new Promise(resolve => setTimeout(resolve, 1))
+    const profile = await queryClient.ensureQueryData(profileQueryOptions);
     if (!profile) {
       throw redirect({ to: '/auth/signin' });
     }
   },
-})
-
+  loader: async () => {
+    return {
+      data: defer(queryClient.ensureQueryData(userDecksQueryOptions))
+    }
+  }
+});
 
 function Layout() {
   const profile = useQuery(profileQueryOptions);

@@ -1,12 +1,11 @@
-import { createFileRoute, redirect } from '@tanstack/react-router';
+import { createLazyFileRoute } from '@tanstack/react-router';
 import { Link, Outlet, useLocation } from '@tanstack/react-router';
 import { TypographyH3 } from '../components/ui/typography';
 import { selectedCss, unselectedCss } from '../lib/constants';
 
-export const Route = createFileRoute('/_main/settings')({
+export const Route = createLazyFileRoute('/_main/settings')({
   component: Settings,
 });
-
 
 function Settings() {
   const location = useLocation();

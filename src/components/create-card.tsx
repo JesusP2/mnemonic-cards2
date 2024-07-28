@@ -1,16 +1,16 @@
 import DOMPurify from 'dompurify';
+import { Image } from 'lucide-react';
 import { marked } from 'marked';
 import { useRef, useState } from 'react';
-import { Button } from './ui/button';
-import { Image } from 'lucide-react';
+import type { z } from 'zod';
 import {
   Tooltip,
   TooltipContent,
   TooltipProvider,
   TooltipTrigger,
 } from '../components/ui/tooltip';
-import type { z } from 'zod';
 import type { fileSchema } from '../lib/schemas';
+import { Button } from './ui/button';
 
 type FileElement = z.infer<typeof fileSchema>;
 export default function CreateCard() {
@@ -62,25 +62,27 @@ export default function CreateCard() {
       body: formData,
     });
     const data = await res.json();
+    console.log(data);
   }
 
   async function handleViewChange() {
-    const markdown = currentView === 'front' ? backViewMarkdown : frontViewMarkdown;
+    const markdown =
+      currentView === 'front' ? backViewMarkdown : frontViewMarkdown;
     if (cardRef.current) {
       const newMarkdown = DOMPurify.sanitize(await marked.parse(markdown), {
         ALLOW_UNKNOWN_PROTOCOLS: true,
       });
       cardRef.current.innerHTML = newMarkdown;
-      setCurrentView(prev => prev === 'front' ? 'back' : 'front')
+      setCurrentView((prev) => (prev === 'front' ? 'back' : 'front'));
     }
   }
 
-  function handleCursorPositionChange (
+  function handleCursorPositionChange(
     // biome-ignore lint/suspicious/noExplicitAny: <explanation>
     e: any,
   ) {
     setCursorPosition(e.target.selectionStart);
-  };
+  }
 
   async function onTextareaValueChange(
     e: React.ChangeEvent<HTMLTextAreaElement>,
@@ -122,11 +124,7 @@ ${newValuePart2}`;
           <Button onClick={onSubmit} size="sm" className="p-2 py-0 h-7">
             Create
           </Button>
-          <Button
-            onClick={handleViewChange}
-            size="sm"
-            className="p-2 py-0 h-7"
-          >
+          <Button onClick={handleViewChange} size="sm" className="p-2 py-0 h-7">
             Switch view
           </Button>
           <TooltipProvider>

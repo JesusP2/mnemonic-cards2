@@ -1,7 +1,7 @@
-import { createFileRoute } from '@tanstack/react-router';
+import { createLazyFileRoute } from '@tanstack/react-router';
 import { DataTableDemo } from '../components/deck-table/data-table';
 
-export const Route = createFileRoute('/_main/me')({
+export const Route = createLazyFileRoute('/_main/me')({
   component: Me,
 });
 

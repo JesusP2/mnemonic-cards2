@@ -1,26 +1,26 @@
-import { createFileRoute } from '@tanstack/react-router'
 import { useForm } from '@conform-to/react';
 import { parseWithZod } from '@conform-to/zod';
+import { createLazyFileRoute } from '@tanstack/react-router';
 import { Link, useNavigate } from '@tanstack/react-router';
 import { useState } from 'react';
 import { LuEye, LuEyeOff } from 'react-icons/lu';
-import { Button, buttonVariants } from '../components//ui/button';
+import { Button, buttonVariants } from '../components/ui/button';
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from '../components//ui/card';
-import { Input } from '../components//ui/input';
+} from '../components/ui/card';
+import { Input } from '../components/ui/input';
 import { Label } from '../components/ui/label';
 import { cn } from '../components/ui/utils';
 import { queryClient } from '../lib/query-client';
 import { signinSchema } from '../lib/schemas';
 
-export const Route = createFileRoute('/auth/signin')({
+export const Route = createLazyFileRoute('/auth/signin')({
   component: LoginForm,
-})
+});
 
 function LoginForm() {
   const navigate = useNavigate({ from: '/auth/signin' });

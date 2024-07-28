@@ -1,7 +1,7 @@
-import { createFileRoute } from '@tanstack/react-router'
 import { useForm } from '@conform-to/react';
 import { parseWithZod } from '@conform-to/zod';
 import { useQuery } from '@tanstack/react-query';
+import { createLazyFileRoute } from '@tanstack/react-router';
 import { CircleUser } from 'lucide-react';
 import { useState } from 'react';
 import { z } from 'zod';
@@ -27,9 +27,9 @@ import { profileQueryOptions } from '../lib/queries';
 import { queryClient } from '../lib/query-client';
 import { profileSchema } from '../lib/schemas';
 
-export const Route = createFileRoute('/_main/settings/profile')({
+export const Route = createLazyFileRoute('/_main/settings/profile')({
   component: Profile,
-})
+});
 
 function Profile() {
   const query = useQuery(profileQueryOptions);

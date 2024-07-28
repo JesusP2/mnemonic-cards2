@@ -53,10 +53,15 @@ export const magicLinkTokenSchema = z.object({
 
 export const fileSchema = z.object({
   file: z.instanceof(File),
-  url:  z.string(),
-})
+  url: z.string(),
+});
 
-export const  createCardSchema  = z.object({
+export const createCardSchema = z.object({
   markdown: z.string(),
-  files: z.array(fileSchema)
-})
+  files: z.array(fileSchema),
+});
+
+export const createDeckSchema = z.object({
+  name: z.string(),
+  description: z.string().optional(),
+});

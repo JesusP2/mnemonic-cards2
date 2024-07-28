@@ -15,19 +15,26 @@ import { createFileRoute } from '@tanstack/react-router'
 import { Route as rootRoute } from './routes/__root'
 import { Route as AuthImport } from './routes/auth'
 import { Route as MainImport } from './routes/_main'
-import { Route as AuthSignupImport } from './routes/auth.signup'
-import { Route as AuthSigninImport } from './routes/auth.signin'
-import { Route as AuthMagicLinkImport } from './routes/auth.magic-link'
-import { Route as AuthForgotPasswordImport } from './routes/auth.forgot-password'
-import { Route as MainSettingsImport } from './routes/_main.settings'
-import { Route as MainMeImport } from './routes/_main.me'
-import { Route as AuthResetPasswordTokenImport } from './routes/auth.reset-password.$token'
-import { Route as MainSettingsProfileImport } from './routes/_main.settings.profile'
-import { Route as MainSettingsAccountImport } from './routes/_main.settings.account'
 
 // Create Virtual Routes
 
 const IndexLazyImport = createFileRoute('/')()
+const AuthSignupLazyImport = createFileRoute('/auth/signup')()
+const AuthSigninLazyImport = createFileRoute('/auth/signin')()
+const AuthMagicLinkLazyImport = createFileRoute('/auth/magic-link')()
+const AuthForgotPasswordLazyImport = createFileRoute('/auth/forgot-password')()
+const MainSettingsLazyImport = createFileRoute('/_main/settings')()
+const MainMeLazyImport = createFileRoute('/_main/me')()
+const AuthResetPasswordTokenLazyImport = createFileRoute(
+  '/auth/reset-password/$token',
+)()
+const MainSettingsProfileLazyImport = createFileRoute(
+  '/_main/settings/profile',
+)()
+const MainSettingsAccountLazyImport = createFileRoute(
+  '/_main/settings/account',
+)()
+const MainDeckDeckIdLazyImport = createFileRoute('/_main/deck/$deckId')()
 
 // Create/Update Routes
 
@@ -46,50 +53,71 @@ const IndexLazyRoute = IndexLazyImport.update({
   getParentRoute: () => rootRoute,
 } as any).lazy(() => import('./routes/index.lazy').then((d) => d.Route))
 
-const AuthSignupRoute = AuthSignupImport.update({
+const AuthSignupLazyRoute = AuthSignupLazyImport.update({
   path: '/signup',
   getParentRoute: () => AuthRoute,
-} as any)
+} as any).lazy(() => import('./routes/auth.signup.lazy').then((d) => d.Route))
 
-const AuthSigninRoute = AuthSigninImport.update({
+const AuthSigninLazyRoute = AuthSigninLazyImport.update({
   path: '/signin',
   getParentRoute: () => AuthRoute,
-} as any)
+} as any).lazy(() => import('./routes/auth.signin.lazy').then((d) => d.Route))
 
-const AuthMagicLinkRoute = AuthMagicLinkImport.update({
+const AuthMagicLinkLazyRoute = AuthMagicLinkLazyImport.update({
   path: '/magic-link',
   getParentRoute: () => AuthRoute,
-} as any)
+} as any).lazy(() =>
+  import('./routes/auth.magic-link.lazy').then((d) => d.Route),
+)
 
-const AuthForgotPasswordRoute = AuthForgotPasswordImport.update({
+const AuthForgotPasswordLazyRoute = AuthForgotPasswordLazyImport.update({
   path: '/forgot-password',
   getParentRoute: () => AuthRoute,
-} as any)
+} as any).lazy(() =>
+  import('./routes/auth.forgot-password.lazy').then((d) => d.Route),
+)
 
-const MainSettingsRoute = MainSettingsImport.update({
+const MainSettingsLazyRoute = MainSettingsLazyImport.update({
   path: '/settings',
   getParentRoute: () => MainRoute,
-} as any)
+} as any).lazy(() =>
+  import('./routes/_main.settings.lazy').then((d) => d.Route),
+)
 
-const MainMeRoute = MainMeImport.update({
+const MainMeLazyRoute = MainMeLazyImport.update({
   path: '/me',
   getParentRoute: () => MainRoute,
-} as any)
+} as any).lazy(() => import('./routes/_main.me.lazy').then((d) => d.Route))
 
-const AuthResetPasswordTokenRoute = AuthResetPasswordTokenImport.update({
-  path: '/reset-password/$token',
-  getParentRoute: () => AuthRoute,
-} as any)
+const AuthResetPasswordTokenLazyRoute = AuthResetPasswordTokenLazyImport.update(
+  {
+    path: '/reset-password/$token',
+    getParentRoute: () => AuthRoute,
+  } as any,
+).lazy(() =>
+  import('./routes/auth.reset-password.$token.lazy').then((d) => d.Route),
+)
 
-const MainSettingsProfileRoute = MainSettingsProfileImport.update({
+const MainSettingsProfileLazyRoute = MainSettingsProfileLazyImport.update({
   path: '/profile',
-  getParentRoute: () => MainSettingsRoute,
-} as any)
+  getParentRoute: () => MainSettingsLazyRoute,
+} as any).lazy(() =>
+  import('./routes/_main.settings.profile.lazy').then((d) => d.Route),
+)
 
-const MainSettingsAccountRoute = MainSettingsAccountImport.update({
+const MainSettingsAccountLazyRoute = MainSettingsAccountLazyImport.update({
   path: '/account',
-  getParentRoute: () => MainSettingsRoute,
-} as any)
+  getParentRoute: () => MainSettingsLazyRoute,
+} as any).lazy(() =>
+  import('./routes/_main.settings.account.lazy').then((d) => d.Route),
+)
+
+const MainDeckDeckIdLazyRoute = MainDeckDeckIdLazyImport.update({
+  path: '/deck/$deckId',
+  getParentRoute: () => MainRoute,
+} as any).lazy(() =>
+  import('./routes/_main.deck.$deckId.lazy').then((d) => d.Route),
+)
 
 // Populate the FileRoutesByPath interface
 
@@ -120,63 +148,70 @@ declare module '@tanstack/react-router' {
       id: '/_main/me'
       path: '/me'
       fullPath: '/me'
-      preLoaderRoute: typeof MainMeImport
+      preLoaderRoute: typeof MainMeLazyImport
       parentRoute: typeof MainImport
     }
     '/_main/settings': {
       id: '/_main/settings'
       path: '/settings'
       fullPath: '/settings'
-      preLoaderRoute: typeof MainSettingsImport
+      preLoaderRoute: typeof MainSettingsLazyImport
       parentRoute: typeof MainImport
     }
     '/auth/forgot-password': {
       id: '/auth/forgot-password'
       path: '/forgot-password'
       fullPath: '/auth/forgot-password'
-      preLoaderRoute: typeof AuthForgotPasswordImport
+      preLoaderRoute: typeof AuthForgotPasswordLazyImport
       parentRoute: typeof AuthImport
     }
     '/auth/magic-link': {
       id: '/auth/magic-link'
       path: '/magic-link'
       fullPath: '/auth/magic-link'
-      preLoaderRoute: typeof AuthMagicLinkImport
+      preLoaderRoute: typeof AuthMagicLinkLazyImport
       parentRoute: typeof AuthImport
     }
     '/auth/signin': {
       id: '/auth/signin'
       path: '/signin'
       fullPath: '/auth/signin'
-      preLoaderRoute: typeof AuthSigninImport
+      preLoaderRoute: typeof AuthSigninLazyImport
       parentRoute: typeof AuthImport
     }
     '/auth/signup': {
       id: '/auth/signup'
       path: '/signup'
       fullPath: '/auth/signup'
-      preLoaderRoute: typeof AuthSignupImport
+      preLoaderRoute: typeof AuthSignupLazyImport
       parentRoute: typeof AuthImport
+    }
+    '/_main/deck/$deckId': {
+      id: '/_main/deck/$deckId'
+      path: '/deck/$deckId'
+      fullPath: '/deck/$deckId'
+      preLoaderRoute: typeof MainDeckDeckIdLazyImport
+      parentRoute: typeof MainImport
     }
     '/_main/settings/account': {
       id: '/_main/settings/account'
       path: '/account'
       fullPath: '/settings/account'
-      preLoaderRoute: typeof MainSettingsAccountImport
-      parentRoute: typeof MainSettingsImport
+      preLoaderRoute: typeof MainSettingsAccountLazyImport
+      parentRoute: typeof MainSettingsLazyImport
     }
     '/_main/settings/profile': {
       id: '/_main/settings/profile'
       path: '/profile'
       fullPath: '/settings/profile'
-      preLoaderRoute: typeof MainSettingsProfileImport
-      parentRoute: typeof MainSettingsImport
+      preLoaderRoute: typeof MainSettingsProfileLazyImport
+      parentRoute: typeof MainSettingsLazyImport
     }
     '/auth/reset-password/$token': {
       id: '/auth/reset-password/$token'
       path: '/reset-password/$token'
       fullPath: '/auth/reset-password/$token'
-      preLoaderRoute: typeof AuthResetPasswordTokenImport
+      preLoaderRoute: typeof AuthResetPasswordTokenLazyImport
       parentRoute: typeof AuthImport
     }
   }
@@ -187,18 +222,19 @@ declare module '@tanstack/react-router' {
 export const routeTree = rootRoute.addChildren({
   IndexLazyRoute,
   MainRoute: MainRoute.addChildren({
-    MainMeRoute,
-    MainSettingsRoute: MainSettingsRoute.addChildren({
-      MainSettingsAccountRoute,
-      MainSettingsProfileRoute,
+    MainMeLazyRoute,
+    MainSettingsLazyRoute: MainSettingsLazyRoute.addChildren({
+      MainSettingsAccountLazyRoute,
+      MainSettingsProfileLazyRoute,
     }),
+    MainDeckDeckIdLazyRoute,
   }),
   AuthRoute: AuthRoute.addChildren({
-    AuthForgotPasswordRoute,
-    AuthMagicLinkRoute,
-    AuthSigninRoute,
-    AuthSignupRoute,
-    AuthResetPasswordTokenRoute,
+    AuthForgotPasswordLazyRoute,
+    AuthMagicLinkLazyRoute,
+    AuthSigninLazyRoute,
+    AuthSignupLazyRoute,
+    AuthResetPasswordTokenLazyRoute,
   }),
 })
 
@@ -222,7 +258,8 @@ export const routeTree = rootRoute.addChildren({
       "filePath": "_main.tsx",
       "children": [
         "/_main/me",
-        "/_main/settings"
+        "/_main/settings",
+        "/_main/deck/$deckId"
       ]
     },
     "/auth": {
@@ -236,11 +273,11 @@ export const routeTree = rootRoute.addChildren({
       ]
     },
     "/_main/me": {
-      "filePath": "_main.me.tsx",
+      "filePath": "_main.me.lazy.tsx",
       "parent": "/_main"
     },
     "/_main/settings": {
-      "filePath": "_main.settings.tsx",
+      "filePath": "_main.settings.lazy.tsx",
       "parent": "/_main",
       "children": [
         "/_main/settings/account",
@@ -248,31 +285,35 @@ export const routeTree = rootRoute.addChildren({
       ]
     },
     "/auth/forgot-password": {
-      "filePath": "auth.forgot-password.tsx",
+      "filePath": "auth.forgot-password.lazy.tsx",
       "parent": "/auth"
     },
     "/auth/magic-link": {
-      "filePath": "auth.magic-link.tsx",
+      "filePath": "auth.magic-link.lazy.tsx",
       "parent": "/auth"
     },
     "/auth/signin": {
-      "filePath": "auth.signin.tsx",
+      "filePath": "auth.signin.lazy.tsx",
       "parent": "/auth"
     },
     "/auth/signup": {
-      "filePath": "auth.signup.tsx",
+      "filePath": "auth.signup.lazy.tsx",
       "parent": "/auth"
     },
+    "/_main/deck/$deckId": {
+      "filePath": "_main.deck.$deckId.lazy.tsx",
+      "parent": "/_main"
+    },
     "/_main/settings/account": {
-      "filePath": "_main.settings.account.tsx",
+      "filePath": "_main.settings.account.lazy.tsx",
       "parent": "/_main/settings"
     },
     "/_main/settings/profile": {
-      "filePath": "_main.settings.profile.tsx",
+      "filePath": "_main.settings.profile.lazy.tsx",
       "parent": "/_main/settings"
     },
     "/auth/reset-password/$token": {
-      "filePath": "auth.reset-password.$token.tsx",
+      "filePath": "auth.reset-password.$token.lazy.tsx",
       "parent": "/auth"
     }
   }

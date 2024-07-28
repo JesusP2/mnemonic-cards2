@@ -1,12 +1,12 @@
-import { StrictMode } from 'react';
-import ReactDOM from 'react-dom/client';
 import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
 import { PersistQueryClientProvider } from '@tanstack/react-query-persist-client';
+import { RouterProvider, createRouter } from '@tanstack/react-router';
+import { StrictMode } from 'react';
+import ReactDOM from 'react-dom/client';
 import { ThemeProvider } from './components/theme-provider';
 import { Toaster } from './components/ui/sonner';
-import { RouterProvider, createRouter } from '@tanstack/react-router';
-import { routeTree } from './routeTree.gen';
 import { persister, queryClient } from './lib/query-client';
+import { routeTree } from './routeTree.gen';
 
 import './index.css';
 import '@fontsource/geist-sans/100.css';

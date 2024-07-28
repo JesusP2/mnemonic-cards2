@@ -1,7 +1,7 @@
-import { createFileRoute } from '@tanstack/react-router'
 import { useForm } from '@conform-to/react';
 import { parseWithZod } from '@conform-to/zod';
 import { useQuery } from '@tanstack/react-query';
+import { createLazyFileRoute } from '@tanstack/react-router';
 import { Link } from '@tanstack/react-router';
 import { useState } from 'react';
 import { Button } from '../components/ui/button';
@@ -20,10 +20,9 @@ import { profileQueryOptions } from '../lib/queries';
 import { queryClient } from '../lib/query-client';
 import { changePasswordSchema } from '../lib/schemas';
 
-export const Route = createFileRoute('/_main/settings/account')({
+export const Route = createLazyFileRoute('/_main/settings/account')({
   component: Account,
-})
-
+});
 
 function Account() {
   const query = useQuery(profileQueryOptions);
@@ -141,4 +140,3 @@ function Account() {
     </>
   );
 }
-

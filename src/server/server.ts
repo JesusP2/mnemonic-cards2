@@ -6,12 +6,12 @@ import 'dotenv/config';
 import type { Session, User } from 'lucia';
 import { accountRoute } from './routes/account';
 import { authRoute } from './routes/auth';
+import { deckRoute } from './routes/deck';
 import { magicLinkRoute } from './routes/magic-link';
 import { githubLoginRouter } from './routes/oauth/github';
 import { googleLoginRouter } from './routes/oauth/google';
 import { checkUserLogin } from './utils/check-user';
 import { createPresignedUrl } from './utils/r2';
-import { deckRoute } from './routes/deck';
 
 const isProd = process.env.NODE_ENV === 'production';
 let html = await readFile(isProd ? 'build/index.html' : 'index.html', 'utf8');
@@ -57,6 +57,7 @@ app.route('/api/deck', deckRoute);
 app.route('/', githubLoginRouter);
 app.route('/', googleLoginRouter);
 app.get('/api/profile', async (c) => {
+  console.log('hit profile')
   const user = c.get('user');
   if (!user) {
     return c.json(null);

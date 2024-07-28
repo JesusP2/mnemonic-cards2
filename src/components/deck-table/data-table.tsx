@@ -1,9 +1,4 @@
-import * as React from 'react';
-import {
-  CaretSortIcon,
-  ChevronDownIcon,
-  DotsHorizontalIcon,
-} from '@radix-ui/react-icons';
+import { ChevronDownIcon, DotsHorizontalIcon } from '@radix-ui/react-icons';
 import {
   type ColumnDef,
   type ColumnFiltersState,
@@ -16,7 +11,12 @@ import {
   getSortedRowModel,
   useReactTable,
 } from '@tanstack/react-table';
+import * as React from 'react';
 
+import { useQuery } from '@tanstack/react-query';
+import { Link } from '@tanstack/react-router';
+import { userDecksQueryOptions } from '../../lib/queries';
+import type { UserDeckDashboard } from '../../lib/types';
 import { Button } from '../ui/button';
 import {
   DropdownMenu,
@@ -36,33 +36,21 @@ import {
   TableHeader,
   TableRow,
 } from '../ui/table';
-import { Link } from '@tanstack/react-router';
+import { CreateDeck } from '../create-deck';
 
-const data: Payment[] = [
-  {
-    id: '1',
-    name: 'Test deck',
-    easy: 3,
-    good: 0,
-    hard: 5,
-    again: 1,
-  }
-];
-
-export type Payment = {
-  id: string;
-  name: string;
-  easy: number;
-  good: number;
-  hard: number;
-  again: number;
-};
-
-export const columns: ColumnDef<Payment>[] = [
+export const columns: ColumnDef<UserDeckDashboard>[] = [
   {
     accessorKey: 'name',
     header: () => <span>Deck name</span>,
-    cell: ({ row }) => <Link to="" className="capitalize">{row.getValue('name')}</Link>,
+    cell: ({ row }) => (
+      <Link
+        to="/deck/$deckId"
+        params={{ deckId: row.original.id }}
+        className="capitalize"
+      >
+        {row.getValue('name')}
+      </Link>
+    ),
   },
   {
     accessorKey: 'easy',
@@ -84,7 +72,7 @@ export const columns: ColumnDef<Payment>[] = [
     id: 'actions',
     enableHiding: false,
     cell: ({ row }) => {
-      const payment = row.original;
+      const deck = row.original;
       return (
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
@@ -96,7 +84,7 @@ export const columns: ColumnDef<Payment>[] = [
           <DropdownMenuContent align="end">
             <DropdownMenuLabel>Actions</DropdownMenuLabel>
             <DropdownMenuItem
-              onClick={() => navigator.clipboard.writeText(payment.id)}
+              onClick={() => navigator.clipboard.writeText(deck.id)}
             >
               Copy payment ID
             </DropdownMenuItem>
@@ -111,6 +99,7 @@ export const columns: ColumnDef<Payment>[] = [
 ];
 
 export function DataTableDemo() {
+  const userDecksQuery = useQuery(userDecksQueryOptions);
   const [sorting, setSorting] = React.useState<SortingState>([]);
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>(
     [],
@@ -120,7 +109,7 @@ export function DataTableDemo() {
   const [rowSelection, setRowSelection] = React.useState({});
 
   const table = useReactTable({
-    data,
+    data: userDecksQuery.data || [],
     columns,
     onSortingChange: setSorting,
     onColumnFiltersChange: setColumnFilters,
@@ -140,41 +129,46 @@ export function DataTableDemo() {
 
   return (
     <div className="w-full">
-      <div className="flex items-center py-4">
+      <div className="flex justify-between items-center py-4">
         <Input
-          placeholder="Filter emails..."
-          value={(table.getColumn('email')?.getFilterValue() as string) ?? ''}
+          placeholder="Filter by name..."
+          value={(table.getColumn('name')?.getFilterValue() as string) ?? ''}
           onChange={(event) =>
-            table.getColumn('email')?.setFilterValue(event.target.value)
+            table.getColumn('name')?.setFilterValue(event.target.value)
           }
           className="max-w-sm"
         />
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="outline" className="ml-auto">
-              Columns <ChevronDownIcon className="ml-2 h-4 w-4" />
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
-            {table
-              .getAllColumns()
-              .filter((column) => column.getCanHide())
-              .map((column) => {
-                return (
-                  <DropdownMenuCheckboxItem
-                    key={column.id}
-                    className="capitalize"
-                    checked={column.getIsVisible()}
-                    onCheckedChange={(value) =>
-                      column.toggleVisibility(!!value)
-                    }
-                  >
-                    {column.id}
-                  </DropdownMenuCheckboxItem>
-                );
-              })}
-          </DropdownMenuContent>
-        </DropdownMenu>
+        <div className="flex gap-x-4">
+          <CreateDeck>
+            <Button variant="outline">+</Button>
+          </CreateDeck>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="outline">
+                Columns <ChevronDownIcon className="ml-2 h-4 w-4" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              {table
+                .getAllColumns()
+                .filter((column) => column.getCanHide())
+                .map((column) => {
+                  return (
+                    <DropdownMenuCheckboxItem
+                      key={column.id}
+                      className="capitalize"
+                      checked={column.getIsVisible()}
+                      onCheckedChange={(value) =>
+                        column.toggleVisibility(!!value)
+                      }
+                    >
+                      {column.id}
+                    </DropdownMenuCheckboxItem>
+                  );
+                })}
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
       </div>
       <div className="rounded-md border">
         <Table>
@@ -187,9 +181,9 @@ export function DataTableDemo() {
                       {header.isPlaceholder
                         ? null
                         : flexRender(
-                          header.column.columnDef.header,
-                          header.getContext(),
-                        )}
+                            header.column.columnDef.header,
+                            header.getContext(),
+                          )}
                     </TableHead>
                   );
                 })}

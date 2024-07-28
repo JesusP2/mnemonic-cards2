@@ -1,6 +1,6 @@
-import { createFileRoute } from '@tanstack/react-router'
 import { useForm } from '@conform-to/react';
 import { parseWithZod } from '@conform-to/zod';
+import { createLazyFileRoute } from '@tanstack/react-router';
 import { useNavigate, useParams } from '@tanstack/react-router';
 import { useState } from 'react';
 import { LuEye, LuEyeOff } from 'react-icons/lu';
@@ -17,9 +17,9 @@ import { Label } from '../components/ui/label';
 import { queryClient } from '../lib/query-client';
 import { validateResetTokenSchema } from '../lib/schemas';
 
-export const Route = createFileRoute('/auth/reset-password/$token')({
+export const Route = createLazyFileRoute('/auth/reset-password/$token')({
   component: ResetPasswordToken,
-})
+});
 
 function ResetPasswordToken() {
   const navigate = useNavigate({ from: '/auth/reset-password/$token' });

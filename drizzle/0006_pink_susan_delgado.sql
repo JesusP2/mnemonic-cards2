@@ -1,1 +1,0 @@
-ALTER TABLE `oauth_account` ADD `provider_user_email` text;

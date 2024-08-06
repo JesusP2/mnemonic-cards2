@@ -1,1 +1,0 @@
-ALTER TABLE `oauth_account` DROP COLUMN `provider_user_email`;

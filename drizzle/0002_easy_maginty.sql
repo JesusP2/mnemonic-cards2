@@ -1,1 +1,0 @@
-ALTER TABLE `oauth_account` ADD `user_id` text NOT NULL;

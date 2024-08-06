@@ -4,7 +4,7 @@ import type { Context, Next } from 'hono';
 import { db } from '../db/pool';
 import type * as schema from '../db/schema';
 import { rateLimitTable } from '../db/schema';
-import { createUlid } from '../lucia';
+import { createUlid } from '../utils/ulid';
 import { getUserIp } from './get-user-ip';
 
 type Sum<A extends number, B extends number> = [

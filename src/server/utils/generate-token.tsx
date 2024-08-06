@@ -9,7 +9,7 @@ import type { ResetTokenModel } from '../data-access/reset-token';
 import { userModel } from '../data-access/users';
 import type * as schema from '../db/schema';
 import type { ResetPasswordEmail } from '../emails/reset-password';
-import { createUlid } from '../lucia';
+import { createUlid } from '../utils/ulid';
 import { sendEmail } from './email';
 import { emailRateLimiter, rateLimitFn } from './rate-limiter';
 

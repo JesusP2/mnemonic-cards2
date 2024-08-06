@@ -44,9 +44,8 @@ export const columns: ColumnDef<UserDeckDashboard>[] = [
     header: () => <span>Deck name</span>,
     cell: ({ row }) => (
       <Link
-        to="/deck/$deckId/study"
+        to="/deck/$deckId/review"
         params={{ deckId: row.original.id }}
-        className="capitalize"
       >
         {row.getValue('name')}
       </Link>
@@ -82,6 +81,14 @@ export const columns: ColumnDef<UserDeckDashboard>[] = [
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
             <DropdownMenuLabel>Actions</DropdownMenuLabel>
+            <DropdownMenuItem asChild>
+              <Link
+                to="/deck/$deckId/review"
+                params={{ deckId: row.original.id }}
+              >
+                Review deck
+              </Link>
+            </DropdownMenuItem>
             <DropdownMenuItem>Rename deck</DropdownMenuItem>
             <DropdownMenuItem asChild>
               <Link

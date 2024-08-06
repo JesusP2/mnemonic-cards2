@@ -34,8 +34,8 @@ const MainSettingsProfileLazyImport = createFileRoute(
 const MainSettingsAccountLazyImport = createFileRoute(
   '/_main/settings/account',
 )()
-const MainDeckDeckIdStudyLazyImport = createFileRoute(
-  '/_main/deck/$deckId/study',
+const MainDeckDeckIdReviewLazyImport = createFileRoute(
+  '/_main/deck/$deckId/review',
 )()
 const MainDeckDeckIdCardLazyImport = createFileRoute(
   '/_main/deck/$deckId/card',
@@ -117,11 +117,11 @@ const MainSettingsAccountLazyRoute = MainSettingsAccountLazyImport.update({
   import('./routes/_main.settings.account.lazy').then((d) => d.Route),
 )
 
-const MainDeckDeckIdStudyLazyRoute = MainDeckDeckIdStudyLazyImport.update({
-  path: '/deck/$deckId/study',
+const MainDeckDeckIdReviewLazyRoute = MainDeckDeckIdReviewLazyImport.update({
+  path: '/deck/$deckId/review',
   getParentRoute: () => MainRoute,
 } as any).lazy(() =>
-  import('./routes/_main.deck.$deckId.study.lazy').then((d) => d.Route),
+  import('./routes/_main.deck.$deckId.review.lazy').then((d) => d.Route),
 )
 
 const MainDeckDeckIdCardLazyRoute = MainDeckDeckIdCardLazyImport.update({
@@ -226,11 +226,11 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof MainDeckDeckIdCardLazyImport
       parentRoute: typeof MainImport
     }
-    '/_main/deck/$deckId/study': {
-      id: '/_main/deck/$deckId/study'
-      path: '/deck/$deckId/study'
-      fullPath: '/deck/$deckId/study'
-      preLoaderRoute: typeof MainDeckDeckIdStudyLazyImport
+    '/_main/deck/$deckId/review': {
+      id: '/_main/deck/$deckId/review'
+      path: '/deck/$deckId/review'
+      fullPath: '/deck/$deckId/review'
+      preLoaderRoute: typeof MainDeckDeckIdReviewLazyImport
       parentRoute: typeof MainImport
     }
   }
@@ -247,7 +247,7 @@ export const routeTree = rootRoute.addChildren({
       MainSettingsProfileLazyRoute,
     }),
     MainDeckDeckIdCardLazyRoute,
-    MainDeckDeckIdStudyLazyRoute,
+    MainDeckDeckIdReviewLazyRoute,
   }),
   AuthRoute: AuthRoute.addChildren({
     AuthForgotPasswordLazyRoute,
@@ -280,7 +280,7 @@ export const routeTree = rootRoute.addChildren({
         "/_main/me",
         "/_main/settings",
         "/_main/deck/$deckId/card",
-        "/_main/deck/$deckId/study"
+        "/_main/deck/$deckId/review"
       ]
     },
     "/auth": {
@@ -337,8 +337,8 @@ export const routeTree = rootRoute.addChildren({
       "filePath": "_main.deck.$deckId.card.lazy.tsx",
       "parent": "/_main"
     },
-    "/_main/deck/$deckId/study": {
-      "filePath": "_main.deck.$deckId.study.lazy.tsx",
+    "/_main/deck/$deckId/review": {
+      "filePath": "_main.deck.$deckId.review.lazy.tsx",
       "parent": "/_main"
     }
   }

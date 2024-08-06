@@ -1,4 +1,4 @@
-import { createLazyFileRoute, useParams } from '@tanstack/react-router'
+import { createLazyFileRoute, useParams } from '@tanstack/react-router';
 import DOMPurify from 'dompurify';
 import { Image } from 'lucide-react';
 import { marked } from 'marked';
@@ -12,15 +12,18 @@ import {
 } from '../components/ui/tooltip';
 import type { fileSchema } from '../lib/schemas';
 import { Button } from '../components/ui/button';
+import { queryClient } from '../lib/query-client';
+import type { UserDeckDashboard } from '../lib/types';
+import { createUlid } from '../server/utils/ulid';
+import { createEmptyCard, Rating } from 'ts-fsrs';
 
 export const Route = createLazyFileRoute('/_main/deck/$deckId/card')({
   component: CreateCard,
-})
-
+});
 
 type FileElement = z.infer<typeof fileSchema>;
 function CreateCard() {
-  const params = useParams({ from: '/_main/deck/$deckId/card' })
+  const params = useParams({ from: '/_main/deck/$deckId/card' });
   const [frontViewMarkdown, setFrontViewMarkdown] = useState('');
   const [backViewMarkdown, setbackViewMarkdown] = useState('');
   const [frontViewFiles, setFrontViewFiles] = useState<FileElement[]>([]);
@@ -48,28 +51,58 @@ function CreateCard() {
 
   async function onSubmit() {
     const formData = new FormData();
-    formData.append('front_view_markdown', frontViewMarkdown);
-    formData.append('front_back_markdown', backViewMarkdown);
+    const newCard = {
+      id: createUlid(),
+      deckId: params.deckId,
+      frontViewMarkdown,
+      backViewMarkdown,
+      frontFiles: frontViewFiles.map((file) => ({ url: file.url })),
+      backFiles: backViewFiles.map((file) => ({ url: file.url })),
+      updatedAt: new Date().getTime(),
+      createdAt: new Date().getTime(),
+      ...createEmptyCard(),
+      difficulty: Rating.Again,
+    };
+
+    queryClient.setQueryData(['user-decks'], (oldData: UserDeckDashboard[]) => {
+      const idx = oldData.findIndex((item) => item.id === params.deckId);
+      if (idx === -1) {
+        return oldData;
+      }
+      const item = oldData[idx] as UserDeckDashboard;
+      item.again = item.again++;
+      return [...oldData];
+    });
+
+    queryClient.setQueryData(
+      ['deck-review-', params.deckId],
+      (oldData: (typeof newCard)[]) => {
+        return [...oldData, newCard];
+      },
+    );
+    for (const [k, v] of Object.entries(newCard)) {
+      if (v instanceof Date) {
+        formData.append(k, JSON.stringify(v.getTime()));
+      } else {
+        formData.append(k, JSON.stringify(v));
+      }
+    }
+
     for (const file of frontViewFiles) {
-      formData.append('front_view_files', file.file);
+      formData.append('frontViewFiles', file.file);
     }
     for (const file of backViewFiles) {
-      formData.append('back_view_files', file.file);
+      formData.append('backViewFiles', file.file);
     }
-    formData.append(
-      'front_view_files_metadata',
-      JSON.stringify(frontViewFiles.map((file) => ({ url: file.url }))),
-    );
-    formData.append(
-      'back_view_files_metadata',
-      JSON.stringify(backViewFiles.map((file) => ({ url: file.url }))),
-    );
+
     const res = await fetch(`/api/deck/${params.deckId}/card`, {
       method: 'POST',
       body: formData,
     });
-    const data = await res.json();
-    console.log(data);
+    if (!res.ok) {
+      const error = await res.json();
+      throw new Error(error.message);
+    }
   }
 
   async function handleViewChange() {
@@ -109,11 +142,11 @@ function CreateCard() {
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file && cardRef.current) {
-      const fileTempUrl = URL.createObjectURL(file);
+      const tempFileUrl = URL.createObjectURL(file);
       const newValuePart1 = markdown.slice(0, cursorPosition);
       const newValuePart2 = markdown.slice(cursorPosition);
       const newValue = `${newValuePart1}
-![image info](${fileTempUrl})
+![image info](${tempFileUrl})
 ${newValuePart2}`;
 
       setMarkdown(newValue);
@@ -121,7 +154,7 @@ ${newValuePart2}`;
         ALLOW_UNKNOWN_PROTOCOLS: true,
       });
       cardRef.current.innerHTML = newMarkdown;
-      setFiles((prev) => [...prev, { file, url: fileTempUrl }]);
+      setFiles((prev) => [...prev, { file, url: tempFileUrl }]);
     }
   };
   return (

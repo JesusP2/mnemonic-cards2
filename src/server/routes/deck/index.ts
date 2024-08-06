@@ -7,9 +7,13 @@ import { createDeckSchema } from "../../../lib/schemas";
 import type { Result } from "../../../lib/types";
 import { db } from "../../db/pool";
 import { cardTable, deckTable } from "../../db/schema";
-import { createUlid } from "../../lucia";
-import { uploadFile as uploadFileToR2 } from "../../utils/r2";
-import { sql } from "drizzle-orm";
+import { createUlid } from "../../utils/ulid";
+import {
+  createPresignedUrl,
+  uploadFile as uploadFileToR2,
+} from "../../utils/r2";
+import { and, eq, lt, sql } from "drizzle-orm";
+import type { SelectCard } from "../../db/types";
 
 const { window } = new JSDOM("<!DOCTYPE html>");
 const domPurify = DOMPurify(window);
@@ -60,18 +64,31 @@ function processView(
 deckRoute.post("/:deckId/card", async (c) => {
   // TODO: check user has access to deck
   const formData = await c.req.formData();
+  const newCard = {} as Record<string, unknown>;
+  const entries = [...formData.entries()];
+  for (const [k, v] of entries) {
+    if (typeof v !== "string") {
+      return;
+    }
+    if (v === "undefined") {
+      newCard[k] = undefined;
+    } else {
+      newCard[k] = JSON.parse(v);
+    }
+  }
+
   const frontViewResult = processView(
-    formData.get("front_view_markdown") as string,
-    formData.get("front_view_files") as unknown as File[],
-    formData.get("front_view_files_metadata") as string,
+    formData.get("frontViewMarkdown") as string,
+    formData.getAll("frontViewFiles") as unknown as File[],
+    formData.get("frontFiles") as string,
   );
   const backViewResult = processView(
-    formData.get("back_view_markdown") as string,
-    formData.get("back_view_files") as unknown as File[],
-    formData.get("back_view_files_metadata") as string,
+    formData.get("backViewMarkdown") as string,
+    formData.getAll("backViewFiles") as unknown as File[],
+    formData.get("backFiles") as string,
   );
   if (!frontViewResult.success || !backViewResult.success) {
-    return c.json({ message: "invalid data" });
+    return c.json({ message: "invalid data" }, 400);
   }
   const keysResult = await Promise.allSettled([
     ...frontViewResult.data.files,
@@ -82,24 +99,105 @@ deckRoute.post("/:deckId/card", async (c) => {
     .filter((key) => key.status === "fulfilled")
     .map((key) => key.value);
   const backKeys = keysResult
-    .slice(backViewResult.data.files.length)
+    .slice(frontViewResult.data.files.length)
     .filter((key) => key.status === "fulfilled")
     .map((key) => key.value);
-  const emptyCard = createEmptyCard();
-  emptyCard.difficulty = Rating.Again;
   await db.insert(cardTable).values({
-    id: createUlid(),
+    ...newCard,
+    frontFiles: JSON.stringify(frontKeys),
+    backFiles: JSON.stringify(backKeys),
     deckId: c.req.param("deckId"),
     frontMarkdown: frontViewResult.data.markdown,
     backMarkdown: backViewResult.data.markdown,
-    frontFiles: JSON.stringify(frontKeys),
-    backFiles: JSON.stringify(backKeys),
-    ...emptyCard,
-    due: emptyCard.due.toISOString(),
-    last_review: emptyCard.due.toISOString(),
-  });
+    last_review: newCard.last_review ? newCard.last_review : null,
+  } as SelectCard);
   return c.json({ message: "completed" });
 });
+
+deckRoute.get("/:deckId/review", async (c) => {
+  const loggedInUser = c.get("user");
+  if (!loggedInUser) {
+    return c.json(null, 403);
+  }
+
+  const cards = await db
+    .select({
+      id: cardTable.id,
+      deckId: cardTable.deckId,
+      frontMarkdown: cardTable.frontMarkdown,
+      backMarkdown: cardTable.backMarkdown,
+      frontFiles: cardTable.frontFiles,
+      backFiles: cardTable.backFiles,
+      due: cardTable.due,
+      stability: cardTable.stability,
+      difficulty: cardTable.difficulty,
+      elapsed_days: cardTable.elapsed_days,
+      scheduled_days: cardTable.scheduled_days,
+      reps: cardTable.reps,
+      lapses: cardTable.lapses,
+      state: cardTable.state,
+      last_review: cardTable.last_review,
+      createdAt: cardTable.createdAt,
+      updatedAt: cardTable.updatedAt,
+    })
+    .from(cardTable)
+    .innerJoin(deckTable, eq(cardTable.deckId, deckTable.id))
+    .where(
+      and(
+        lt(cardTable.due, Date.now()),
+        eq(deckTable.userId, loggedInUser.id),
+        eq(deckTable.id, c.req.param("deckId")),
+      ),
+    )
+    .limit(2);
+  const promises = cards.map(async (card) => {
+    const frontFiles = JSON.parse(card.frontFiles);
+    const frontUrlsPromises = frontFiles.map((file: string) =>
+      createPresignedUrl(file),
+    ) as Promise<string>[];
+    const backFiles = JSON.parse(card.backFiles);
+    const backUrlsPromises = backFiles.map((file: string) =>
+      createPresignedUrl(file),
+    ) as Promise<string>[];
+    const links = await Promise.all([
+      ...frontUrlsPromises,
+      ...backUrlsPromises,
+    ]);
+    const frontLinks = links.slice(0, frontFiles.length);
+    const backLinks = links.slice(backFiles.length);
+    for (let i = 0; i < frontFiles.length; i++) {
+      card.frontMarkdown = card.frontMarkdown.replaceAll(
+        frontFiles[i],
+        frontLinks[i] as string,
+      );
+    }
+    for (let i = 0; i < backFiles.length; i++) {
+      card.backMarkdown = card.backMarkdown.replaceAll(
+        backFiles[i],
+        backLinks[i] as string,
+      );
+    }
+    return card;
+  });
+  const files = await Promise.allSettled(promises);
+  const successfulFiles = files as PromiseFulfilledResult<SelectCard>[];
+  for (const file of files) {
+    if (file.status === "rejected") {
+      return c.json(
+        {
+          message: "Could not process card",
+        },
+        400,
+      );
+    }
+  }
+  console.log(successfulFiles[0].value);
+  return c.json(cards);
+});
+
+// deckRoute.put("/:deckId/card/:cardId", async (c) => {
+//
+// });
 
 deckRoute.get("/", async (c) => {
   const loggedInUser = c.get("user");
@@ -114,7 +212,8 @@ deckRoute.get("/", async (c) => {
   FROM ${deckTable} LEFT JOIN ${cardTable} ON ${deckTable.id} = ${cardTable.deckId}
   WHERE ${deckTable.userId} = ${loggedInUser.id}
   GROUP BY ${deckTable.id}`;
-  const res = await db.run(statement)
+  const res = await db.run(statement);
+
   return c.json(res.rows);
 });
 

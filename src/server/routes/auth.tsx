@@ -7,7 +7,8 @@ import {
   deleteUserSessions,
 } from '../data-access/sessions';
 import { userModel } from '../data-access/users';
-import { createUlid, hashPassword } from '../lucia';
+import { hashPassword } from '../lucia';
+import { createUlid } from '../utils/ulid';
 import { authRateLimiter, rateLimitMiddleware } from '../utils/rate-limiter';
 
 export const authRoute = new Hono();

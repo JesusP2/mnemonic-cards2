@@ -6,7 +6,8 @@ import { createUserSession } from '../../data-access/sessions.js';
 import { userModel } from '../../data-access/users.js';
 import { db } from '../../db/pool.js';
 import { oauthAccountTable } from '../../db/schema/index.js';
-import { createUlid, google } from '../../lucia';
+import { google } from '../../lucia';
+import { createUlid } from '../../utils/ulid.js';
 import { uploadFile } from '../../utils/r2.js';
 
 export const googleLoginRouter = new Hono();

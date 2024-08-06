@@ -1,7 +1,6 @@
 import { DrizzleSQLiteAdapter } from '@lucia-auth/adapter-drizzle';
 import { GitHub, Google } from 'arctic';
 import { Lucia } from 'lucia';
-import { ulidFactory } from 'ulid-workers';
 import { db } from './db/pool';
 import { sessionTable, userTable } from './db/schema';
 import { envs } from './server-envs';
@@ -48,11 +47,6 @@ export async function hashPassword(password: string) {
 export async function comparePasswords(password1: string, password2: string) {
   const passworddHash = await hashPassword(password2);
   return passworddHash === password1;
-}
-
-export function createUlid() {
-  const ulid = ulidFactory();
-  return ulid();
 }
 
 declare module 'lucia' {

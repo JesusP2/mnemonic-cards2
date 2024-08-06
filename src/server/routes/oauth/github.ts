@@ -6,7 +6,8 @@ import { createUserSession } from '../../data-access/sessions.js';
 import { userModel } from '../../data-access/users.js';
 import { db } from '../../db/pool.js';
 import { oauthAccountTable } from '../../db/schema/index.js';
-import { createUlid, github } from '../../lucia.js';
+import { github } from '../../lucia.js';
+import { createUlid } from '../../utils/ulid.js';
 import { uploadFile } from '../../utils/r2.js';
 
 export const githubLoginRouter = new Hono();

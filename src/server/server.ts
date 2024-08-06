@@ -57,7 +57,6 @@ app.route('/api/deck', deckRoute);
 app.route('/', githubLoginRouter);
 app.route('/', googleLoginRouter);
 app.get('/api/profile', async (c) => {
-  console.log('hit profile')
   const user = c.get('user');
   if (!user) {
     return c.json(null);

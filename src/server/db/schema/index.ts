@@ -6,8 +6,8 @@ export const userTable = sqliteTable('user', {
   avatar: text('avatar'),
   email: text('email').unique(),
   password: text('password'),
-  createdAt: text('created_at').$defaultFn(() => new Date().toISOString()),
-  updatedAt: text('updated_at').$defaultFn(() => new Date().toISOString()),
+  createdAt: integer('created_at').$defaultFn(() => new Date().getTime()),
+  updatedAt: integer('updated_at').$defaultFn(() => new Date().getTime()),
 });
 
 export const oauthAccountTable = sqliteTable('oauth_account', {
@@ -15,8 +15,8 @@ export const oauthAccountTable = sqliteTable('oauth_account', {
   userId: text('user_id').notNull(),
   providerId: text('provider_id').notNull(),
   providerUserId: text('provider_user_id').notNull(),
-  createdAt: text('created_at').$defaultFn(() => new Date().toISOString()),
-  updatedAt: text('updated_at').$defaultFn(() => new Date().toISOString()),
+  createdAt: integer('created_at').$defaultFn(() => new Date().getTime()),
+  updatedAt: integer('updated_at').$defaultFn(() => new Date().getTime()),
 });
 
 export const sessionTable = sqliteTable('session', {
@@ -32,11 +32,11 @@ export const cardTable = sqliteTable('card', {
   deckId: text('deck_id')
     .notNull()
     .references(() => deckTable.id, { onDelete: 'cascade' }),
-  frontMarkdown: text('front_markdown'),
-  backMarkdown: text('back_markdown'),
-  frontFiles: text('front_files'),
-  backFiles: text('back_files'),
-  due: text('due').$defaultFn(() => new Date().toISOString()),
+  frontMarkdown: text('front_markdown').notNull(),
+  backMarkdown: text('back_markdown').notNull(),
+  frontFiles: text('front_files').notNull(),
+  backFiles: text('back_files').notNull(),
+  due: integer('due').$defaultFn(() => new Date().getTime()),
   stability: integer('stability').notNull(),
   difficulty: integer('difficulty').notNull(),
   elapsed_days: integer('elapsed_days').notNull(),
@@ -44,9 +44,9 @@ export const cardTable = sqliteTable('card', {
   reps: integer('reps').notNull(),
   lapses: integer('lapses').notNull(),
   state: integer('state').notNull(),
-  last_review: text('last_review'),
-  createdAt: text('created_at').$defaultFn(() => new Date().toISOString()),
-  updatedAt: text('updated_at').$defaultFn(() => new Date().toISOString()),
+  last_review: integer('last_review'),
+  createdAt: integer('created_at').$defaultFn(() => new Date().getTime()),
+  updatedAt: integer('updated_at').$defaultFn(() => new Date().getTime()),
 });
 
 export const deckTable = sqliteTable('deck', {
@@ -57,8 +57,8 @@ export const deckTable = sqliteTable('deck', {
   private: integer('private'),
   name: text('name').notNull(),
   description: text('name'),
-  createdAt: text('created_at').$defaultFn(() => new Date().toISOString()),
-  updatedAt: text('updated_at').$defaultFn(() => new Date().toISOString()),
+  createdAt: integer('created_at').$defaultFn(() => new Date().getTime()),
+  updatedAt: integer('updated_at').$defaultFn(() => new Date().getTime()),
 });
 
 export const emailVerificationTable = sqliteTable('email_verification', {

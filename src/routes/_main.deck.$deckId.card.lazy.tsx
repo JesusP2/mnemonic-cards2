@@ -61,17 +61,16 @@ function CreateCard() {
       updatedAt: new Date().getTime(),
       createdAt: new Date().getTime(),
       ...createEmptyCard(),
-      difficulty: Rating.Again,
+      rating: Rating.Again,
     };
 
     queryClient.setQueryData(['user-decks'], (oldData: UserDeckDashboard[]) => {
-      const idx = oldData.findIndex((item) => item.id === params.deckId);
-      if (idx === -1) {
-        return oldData;
-      }
-      const item = oldData[idx] as UserDeckDashboard;
-      item.again = item.again++;
-      return [...oldData];
+      return oldData.map((data) => {
+        if (data.id === params.deckId) {
+          return { ...data, again: data.again + 1 };
+        }
+        return data;
+      });
     });
 
     queryClient.setQueryData(

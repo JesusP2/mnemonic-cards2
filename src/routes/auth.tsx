@@ -6,7 +6,10 @@ import { queryClient } from '../lib/query-client';
 export const Route = createFileRoute('/auth')({
   component: AuthLayout,
   beforeLoad: async () => {
-    const profile = await queryClient.ensureQueryData(profileQueryOptions);
+    // artificial delay to avoid race condition.
+    // queryClient doesnt hydrate from localStorage fast enough causing the profileQueryOptions to fire.
+    await new Promise(resolve => setTimeout(resolve, 1))
+    const profile = await queryClient.fetchQuery(profileQueryOptions);
     if (profile) {
       throw redirect({ to: '/me' });
     }

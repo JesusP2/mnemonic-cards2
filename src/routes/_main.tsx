@@ -11,17 +11,21 @@ export const Route = createFileRoute('/_main')({
   beforeLoad: async () => {
     // artificial delay to avoid race condition.
     // queryClient doesnt hydrate from localStorage fast enough causing the profileQueryOptions to fire.
-    await new Promise(resolve => setTimeout(resolve, 1))
-    const profile = await queryClient.ensureQueryData(profileQueryOptions);
+    await new Promise((resolve) => setTimeout(resolve, 1));
+    let profile = await queryClient.fetchQuery(profileQueryOptions);
+    if (document.cookie.includes('revalidate=true')) {
+      queryClient.invalidateQueries({ queryKey: ['profile'] });
+      profile = await queryClient.fetchQuery(profileQueryOptions);
+    }
     if (!profile) {
       throw redirect({ to: '/auth/signin' });
     }
   },
   loader: async () => {
     return {
-      data: defer(queryClient.ensureQueryData(userDecksQueryOptions))
-    }
-  }
+      data: defer(queryClient.ensureQueryData(userDecksQueryOptions)),
+    };
+  },
 });
 
 function Layout() {

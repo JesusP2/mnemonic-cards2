@@ -1,4 +1,4 @@
-import { Link } from '@tanstack/react-router';
+import { Link, useNavigate } from '@tanstack/react-router';
 import { Home, LogOut, Settings } from 'lucide-react';
 import { FiChevronRight } from 'react-icons/fi';
 import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar';
@@ -12,12 +12,14 @@ import {
   DropdownMenuShortcut,
   DropdownMenuTrigger,
 } from './ui/dropdown-menu';
+import { queryClient } from '../lib/query-client';
 
 export function UserDropdown({
   user,
 }: {
   user: { username: string; email: string | null; avatar: string | null };
 }) {
+  const navigate = useNavigate();
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
@@ -53,9 +55,23 @@ export function UserDropdown({
             <DropdownMenuShortcut>⌘S</DropdownMenuShortcut>
           </DropdownMenuItem>
         </Link>
-        <form action="/api/auth/signout" method="post">
+        <form
+          onSubmit={async (e) => {
+            e.preventDefault();
+            const res = await fetch('/api/auth/signout', {
+              method: 'POST'
+            })
+            if (!res.ok) {
+              return;
+            }
+            await queryClient.invalidateQueries({
+              queryKey: ['profile']
+            });
+            navigate({ to: '/auth/signin' });
+          }}
+        >
           <DropdownMenuItem asChild>
-            <button className="w-full flex gap-x-2">
+            <button type="submit" className="w-full flex gap-x-2">
               <LogOut size={15} />
               Log out
               <DropdownMenuShortcut>⇧⌘Q</DropdownMenuShortcut>

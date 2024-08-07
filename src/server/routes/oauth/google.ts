@@ -1,44 +1,44 @@
-import { generateState } from 'arctic';
-import { and, eq } from 'drizzle-orm';
-import { Hono } from 'hono';
-import { getCookie, setCookie } from 'hono/cookie';
-import { createUserSession } from '../../data-access/sessions.js';
-import { userModel } from '../../data-access/users.js';
-import { db } from '../../db/pool.js';
-import { oauthAccountTable } from '../../db/schema/index.js';
-import { google } from '../../lucia';
-import { createUlid } from '../../utils/ulid.js';
-import { uploadFile } from '../../utils/r2.js';
+import { generateState } from "arctic";
+import { and, eq } from "drizzle-orm";
+import { Hono } from "hono";
+import { getCookie, setCookie } from "hono/cookie";
+import { createUserSession } from "../../data-access/sessions.js";
+import { userModel } from "../../data-access/users.js";
+import { db } from "../../db/pool.js";
+import { oauthAccountTable } from "../../db/schema/index.js";
+import { google } from "../../lucia";
+import { createUlid } from "../../utils/ulid.js";
+import { uploadFile } from "../../utils/r2.js";
 
 export const googleLoginRouter = new Hono();
 
-googleLoginRouter.get('/auth/google', async (c) => {
+googleLoginRouter.get("/auth/google", async (c) => {
   const state = generateState();
   const url = await google.createAuthorizationURL(state, state, {
-    scopes: ['profile', 'email', 'openid'],
+    scopes: ["profile", "email", "openid"],
   });
-  setCookie(c, 'google_oauth_state', state, {
-    path: '/',
-    secure: process.env.NODE_ENV === 'production',
+  setCookie(c, "google_oauth_state", state, {
+    path: "/",
+    secure: process.env.NODE_ENV === "production",
     httpOnly: true,
     maxAge: 60 * 10,
-    sameSite: 'Lax',
+    sameSite: "Lax",
   });
   return c.redirect(url.toString());
 });
 
-googleLoginRouter.get('/auth/google/callback', async (c) => {
-  const code = c.req.query('code')?.toString() ?? null;
-  const state = c.req.query('state')?.toString() ?? null;
+googleLoginRouter.get("/auth/google/callback", async (c) => {
+  const code = c.req.query("code")?.toString() ?? null;
+  const state = c.req.query("state")?.toString() ?? null;
   const storedState = getCookie(c).google_oauth_state ?? null;
   if (!code || !state || !storedState || state !== storedState) {
-    return c.redirect('/auth/signin');
+    return c.redirect("/auth/signin");
   }
 
   try {
     const tokens = await google.validateAuthorizationCode(code, state);
     const googleUserResponse = await fetch(
-      'https://openidconnect.googleapis.com/v1/userinfo',
+      "https://openidconnect.googleapis.com/v1/userinfo",
       {
         headers: {
           Authorization: `Bearer ${tokens.accessToken}`,
@@ -51,22 +51,26 @@ googleLoginRouter.get('/auth/google/callback', async (c) => {
       .from(oauthAccountTable)
       .where(
         and(
-          eq(oauthAccountTable.providerId, 'google'),
+          eq(oauthAccountTable.providerId, "google"),
           eq(oauthAccountTable.providerUserId, googleUser.sub),
         ),
       );
     if (existingUser) {
       await createUserSession(c, existingUser.userId);
-      return c.redirect('/me');
+      setCookie(c, "revalidate", "true", {
+        path: "/",
+        maxAge: 10,
+      });
+      return c.redirect("/me");
     }
     let avatarKey = null;
     if (googleUser.picture) {
       const pictureRes = await fetch(googleUser.picture);
-      const resType = pictureRes.headers.get('Content-Type');
-      const allowedContentTypes = ['image/png', 'image/jpeg', 'image/webp'];
+      const resType = pictureRes.headers.get("Content-Type");
+      const allowedContentTypes = ["image/png", "image/jpeg", "image/webp"];
       if (resType && allowedContentTypes.includes(resType)) {
         const buf = Buffer.from(await pictureRes.arrayBuffer());
-        const extension = resType.split('/')[1];
+        const extension = resType.split("/")[1];
         avatarKey = `${createUlid()}.${extension}`;
         await uploadFile(buf, avatarKey);
       }
@@ -77,7 +81,7 @@ googleLoginRouter.get('/auth/google/callback', async (c) => {
       await tx.insert(oauthAccountTable).values({
         id: oauthId,
         userId: userId,
-        providerId: 'google',
+        providerId: "google",
         providerUserId: googleUser.sub,
       });
       await userModel.create(
@@ -92,10 +96,14 @@ googleLoginRouter.get('/auth/google/callback', async (c) => {
       );
     });
     await createUserSession(c, userId);
-    return c.redirect('/me');
+    setCookie(c, "revalidate", "true", {
+      path: "/",
+      maxAge: 10,
+    });
+    return c.redirect("/me");
   } catch (err) {
     console.error(err);
-    return c.redirect('/auth/signin');
+    return c.redirect("/auth/signin");
   }
 });
 

@@ -39,6 +39,7 @@ export const cardTable = sqliteTable('card', {
   due: integer('due').$defaultFn(() => new Date().getTime()),
   stability: integer('stability').notNull(),
   difficulty: integer('difficulty').notNull(),
+  rating: integer('rating').notNull(),
   elapsed_days: integer('elapsed_days').notNull(),
   scheduled_days: integer('schedules_days').notNull(),
   reps: integer('reps').notNull(),

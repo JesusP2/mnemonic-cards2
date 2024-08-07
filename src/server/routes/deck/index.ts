@@ -131,6 +131,7 @@ deckRoute.get("/:deckId/review", async (c) => {
       due: cardTable.due,
       stability: cardTable.stability,
       difficulty: cardTable.difficulty,
+      rating: cardTable.rating,
       elapsed_days: cardTable.elapsed_days,
       scheduled_days: cardTable.scheduled_days,
       reps: cardTable.reps,
@@ -144,12 +145,12 @@ deckRoute.get("/:deckId/review", async (c) => {
     .innerJoin(deckTable, eq(cardTable.deckId, deckTable.id))
     .where(
       and(
-        lt(cardTable.due, Date.now()),
+        // lt(cardTable.due, Date.now()),
         eq(deckTable.userId, loggedInUser.id),
         eq(deckTable.id, c.req.param("deckId")),
       ),
-    )
-    .limit(2);
+    );
+  // .limit(2);
   const promises = cards.map(async (card) => {
     const frontFiles = JSON.parse(card.frontFiles);
     const frontUrlsPromises = frontFiles.map((file: string) =>
@@ -179,10 +180,10 @@ deckRoute.get("/:deckId/review", async (c) => {
     }
     return card;
   });
-  const files = await Promise.allSettled(promises);
-  const successfulFiles = files as PromiseFulfilledResult<SelectCard>[];
-  for (const file of files) {
-    if (file.status === "rejected") {
+  const updatedCards = await Promise.allSettled(promises);
+  for (const updatedCard of updatedCards) {
+    if (updatedCard.status === "rejected") {
+      console.error(updatedCard.reason)
       return c.json(
         {
           message: "Could not process card",
@@ -191,7 +192,6 @@ deckRoute.get("/:deckId/review", async (c) => {
       );
     }
   }
-  console.log(successfulFiles[0].value);
   return c.json(cards);
 });
 
@@ -205,10 +205,10 @@ deckRoute.get("/", async (c) => {
     return c.json(null, 403);
   }
   const statement = sql`SELECT ${deckTable.name} AS name, ${deckTable.id} AS id,
-  SUM(CASE WHEN ${cardTable.difficulty} = 4 THEN 1 ELSE 0 END) AS easy,
-  SUM(CASE WHEN ${cardTable.difficulty} = 3 THEN 1 ELSE 0 END) AS good,
-  SUM(CASE WHEN ${cardTable.difficulty} = 2 THEN 1 ELSE 0 END) AS hard,
-  SUM(CASE WHEN ${cardTable.difficulty} = 1 THEN 1 ELSE 0 END) AS again
+  SUM(CASE WHEN ${cardTable.rating} = 4 THEN 1 ELSE 0 END) AS easy,
+  SUM(CASE WHEN ${cardTable.rating} = 3 THEN 1 ELSE 0 END) AS good,
+  SUM(CASE WHEN ${cardTable.rating} = 2 THEN 1 ELSE 0 END) AS hard,
+  SUM(CASE WHEN ${cardTable.rating} = 1 THEN 1 ELSE 0 END) AS again
   FROM ${deckTable} LEFT JOIN ${cardTable} ON ${deckTable.id} = ${cardTable.deckId}
   WHERE ${deckTable.userId} = ${loggedInUser.id}
   GROUP BY ${deckTable.id}`;

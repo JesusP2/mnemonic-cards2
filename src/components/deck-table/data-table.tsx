@@ -13,7 +13,7 @@ import {
 } from '@tanstack/react-table';
 import * as React from 'react';
 
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Link } from '@tanstack/react-router';
 import { userDecksQueryOptions } from '../../lib/queries';
 import type { UserDeckDashboard } from '../../lib/types';
@@ -37,16 +37,14 @@ import {
   TableRow,
 } from '../ui/table';
 import { CreateDeck } from '../create-deck';
+import { toast } from 'sonner';
 
 export const columns: ColumnDef<UserDeckDashboard>[] = [
   {
     accessorKey: 'name',
     header: () => <span>Deck name</span>,
     cell: ({ row }) => (
-      <Link
-        to="/deck/$deckId/review"
-        params={{ deckId: row.original.id }}
-      >
+      <Link to="/deck/$deckId/review" params={{ deckId: row.original.id }}>
         {row.getValue('name')}
       </Link>
     ),
@@ -71,6 +69,42 @@ export const columns: ColumnDef<UserDeckDashboard>[] = [
     id: 'actions',
     enableHiding: false,
     cell: ({ row }) => {
+      const queryClient = useQueryClient();
+      const deleteMutation = useMutation({
+        meta: {
+          type: 'notification',
+        },
+        mutationFn: async (deckId: string) => {
+          const response = await fetch(`/api/deck/${deckId}`, {
+            method: 'DELETE',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+          });
+          if (!response.ok) {
+            throw new Error('Failed to delete deck');
+          }
+          return response.json();
+        },
+      });
+
+      const handleDeleteDeck = () => {
+        deleteMutation.mutateAsync(row.original.id).then(() => {
+          queryClient.invalidateQueries({
+            queryKey: ['deck-review-', row.original.id],
+          });
+          queryClient.removeQueries({
+            queryKey: ['deck-review-', row.original.id],
+          });
+          queryClient.setQueryData(
+            ['user-decks'],
+            (oldData: Record<string, unknown>[]) => {
+              return oldData.filter((record) => record.id !== row.original.id);
+            },
+          );
+        });
+      };
+
       return (
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
@@ -99,7 +133,9 @@ export const columns: ColumnDef<UserDeckDashboard>[] = [
               </Link>
             </DropdownMenuItem>
             <DropdownMenuSeparator />
-            <DropdownMenuItem>Delete deck</DropdownMenuItem>
+            <DropdownMenuItem onSelect={handleDeleteDeck}>
+              Delete deck
+            </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
       );
@@ -190,9 +226,9 @@ export function DataTableDemo() {
                       {header.isPlaceholder
                         ? null
                         : flexRender(
-                          header.column.columnDef.header,
-                          header.getContext(),
-                        )}
+                            header.column.columnDef.header,
+                            header.getContext(),
+                          )}
                     </TableHead>
                   );
                 })}

@@ -5,7 +5,7 @@ import DOMPurify from 'dompurify';
 import { useEffect, useState } from 'react';
 import { marked } from 'marked';
 import { Button } from '../components/ui/button';
-import { type Card, Grade, Rating } from 'ts-fsrs';
+import { type Card, type Grade, Rating } from 'ts-fsrs';
 import type { SelectCard } from '../server/db/types';
 import type { UserDeckDashboard } from '../lib/types';
 import { fsrsScheduler } from '../lib/fsrs';
@@ -24,7 +24,7 @@ function Review() {
   useEffect(() => {
     if (query.data) {
       const card = query.data.find(
-        (card) => card.due && card.due < new Date().getTime(),
+        (card) => card.due && new Date(card.due).getTime() < new Date().getTime(),
       );
       setCurrentCard(card);
     }

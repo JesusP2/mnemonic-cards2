@@ -6,7 +6,7 @@ import {
 } from '@conform-to/react';
 import { parseWithZod } from '@conform-to/zod';
 import { type ReactNode, useState } from 'react';
-import { queryClient } from '../lib/query-client';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { createDeckSchema } from '../lib/schemas';
 import { Button } from './ui/button';
 import {
@@ -23,6 +23,27 @@ import { Textarea } from './ui/textarea';
 
 export function CreateDeck({ children }: { children: ReactNode }) {
   const [lastResult, setLastResult] = useState(null);
+  const queryClient = useQueryClient();
+  const createDeckMutation = useMutation({
+    meta: {
+      type: 'notification',
+    },
+    mutationKey: ['user-decks'],
+    mutationFn: async (formData: FormData) => {
+      const res = await fetch('/api/deck', {
+        method: 'POST',
+        body: formData,
+      });
+      if (!res.ok) {
+        const error = await res.json();
+        setLastResult(error);
+        if ('message' in error) {
+          throw new Error(error.message);
+        }
+      }
+    },
+  });
+
   const [form, fields] = useForm({
     lastResult,
     shouldValidate: 'onBlur',
@@ -34,16 +55,9 @@ export function CreateDeck({ children }: { children: ReactNode }) {
     },
     onSubmit: async (e, context) => {
       e.preventDefault();
-      const res = await fetch('/api/deck', {
-        method: 'POST',
-        body: context.formData,
+      createDeckMutation.mutateAsync(context.formData).then(() => {
+        queryClient.invalidateQueries({ queryKey: ['user-decks'] });
       });
-      if (!res.ok) {
-        const json = await res.json();
-        setLastResult(json);
-        return;
-      }
-      await queryClient.invalidateQueries();
     },
     defaultValue: {
       name: '',
@@ -65,22 +79,24 @@ export function CreateDeck({ children }: { children: ReactNode }) {
             <Input
               {...getInputProps(fields.name, { type: 'text' })}
               placeholder="Japanese"
-              className="col-span-3"
+              className="col-span-3 mt-1"
             />
           </div>
-          <div>
+          <div className="mt-2">
             <Label htmlFor={fields.description.id} className="text-right">
               Description
             </Label>
             <Textarea
               {...getTextareaProps(fields.description)}
               placeholder="Description (optional)"
-              className="col-span-3"
+              className="col-span-3 mt-1"
             />
           </div>
-        <DialogFooter>
-          <Button type="submit">Save changes</Button>
-        </DialogFooter>
+          <DialogFooter>
+            <Button className="mt-4" type="submit">
+              Save changes
+            </Button>
+          </DialogFooter>
         </form>
       </DialogContent>
     </Dialog>

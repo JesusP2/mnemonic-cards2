@@ -61,7 +61,16 @@ export const createCardSchema = z.object({
   files: z.array(fileSchema),
 });
 
+export const updateCardSchema = z.object({
+
+});
+
 export const createDeckSchema = z.object({
   name: z.string(),
+  description: z.string().optional(),
+});
+
+export const updateDeckSchema = z.object({
+  name: z.string().optional(),
   description: z.string().optional(),
 });

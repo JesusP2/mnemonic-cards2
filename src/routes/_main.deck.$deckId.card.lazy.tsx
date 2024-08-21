@@ -24,29 +24,29 @@ export const Route = createLazyFileRoute('/_main/deck/$deckId/card')({
 type FileElement = z.infer<typeof fileSchema>;
 function CreateCard() {
   const params = useParams({ from: '/_main/deck/$deckId/card' });
-  const [frontViewMarkdown, setFrontViewMarkdown] = useState('');
-  const [backViewMarkdown, setbackViewMarkdown] = useState('');
-  const [frontViewFiles, setFrontViewFiles] = useState<FileElement[]>([]);
-  const [backViewFiles, setBackViewFiles] = useState<FileElement[]>([]);
+  const [frontMarkdown, setFrontMarkdown] = useState('');
+  const [backMarkdown, setbackMarkdown] = useState('');
+  const [frontFiles, setFrontFiles] = useState<FileElement[]>([]);
+  const [backFiles, setBackFiles] = useState<FileElement[]>([]);
   const [currentView, setCurrentView] = useState<'front' | 'back'>('front');
   const cardRef = useRef<null | HTMLDivElement>(null);
   const [cursorPosition, setCursorPosition] = useState(0);
 
   const markdown =
-    currentView === 'front' ? frontViewMarkdown : backViewMarkdown;
-  const files = currentView === 'front' ? frontViewFiles : backViewFiles;
+    currentView === 'front' ? frontMarkdown : backMarkdown;
+  const files = currentView === 'front' ? frontFiles : backFiles;
   function setMarkdown(str: string) {
     return currentView === 'front'
-      ? setFrontViewMarkdown(str)
-      : setbackViewMarkdown(str);
+      ? setFrontMarkdown(str)
+      : setbackMarkdown(str);
   }
 
   function setFiles(
     files: FileElement[] | ((files: FileElement[]) => FileElement[]),
   ) {
     return currentView === 'front'
-      ? setFrontViewFiles(files)
-      : setBackViewFiles(files);
+      ? setFrontFiles(files)
+      : setBackFiles(files);
   }
 
   async function onSubmit() {
@@ -54,10 +54,10 @@ function CreateCard() {
     const newCard = {
       id: createUlid(),
       deckId: params.deckId,
-      frontViewMarkdown,
-      backViewMarkdown,
-      frontFiles: frontViewFiles.map((file) => ({ url: file.url })),
-      backFiles: backViewFiles.map((file) => ({ url: file.url })),
+      frontMarkdown,
+      backMarkdown,
+      frontFilesMetadata: frontFiles.map((file) => ({ url: file.url })),
+      backFilesMetadata: backFiles.map((file) => ({ url: file.url })),
       updatedAt: new Date().getTime(),
       createdAt: new Date().getTime(),
       ...createEmptyCard(),
@@ -76,7 +76,10 @@ function CreateCard() {
     queryClient.setQueryData(
       ['deck-review-', params.deckId],
       (oldData: (typeof newCard)[]) => {
-        return [...oldData, newCard];
+        if (oldData) {
+          return [...oldData, newCard];
+        }
+        return [newCard];
       },
     );
     for (const [k, v] of Object.entries(newCard)) {
@@ -87,13 +90,12 @@ function CreateCard() {
       }
     }
 
-    for (const file of frontViewFiles) {
-      formData.append('frontViewFiles', file.file);
+    for (const file of frontFiles) {
+      formData.append('frontFiles', file.file);
     }
-    for (const file of backViewFiles) {
-      formData.append('backViewFiles', file.file);
+    for (const file of backFiles) {
+      formData.append('backFiles', file.file);
     }
-
     const res = await fetch(`/api/deck/${params.deckId}/card`, {
       method: 'POST',
       body: formData,
@@ -106,7 +108,7 @@ function CreateCard() {
 
   async function handleViewChange() {
     const markdown =
-      currentView === 'front' ? backViewMarkdown : frontViewMarkdown;
+      currentView === 'front' ? backMarkdown : frontMarkdown;
     if (cardRef.current) {
       const newMarkdown = DOMPurify.sanitize(await marked.parse(markdown), {
         ALLOW_UNKNOWN_PROTOCOLS: true,
@@ -195,3 +197,4 @@ ${newValuePart2}`;
     </div>
   );
 }
+

@@ -2,8 +2,12 @@ import { parseWithZod } from "@conform-to/zod";
 import DOMPurify from "dompurify";
 import { Hono } from "hono";
 import { JSDOM } from "jsdom";
-import { createEmptyCard, Rating } from "ts-fsrs";
-import { createDeckSchema } from "../../../lib/schemas";
+// import { createEmptyCard, Rating } from "ts-fsrs";
+import {
+  createDeckSchema,
+  updateDeckSchema,
+  updateCardSchema,
+} from "../../../lib/schemas";
 import type { Result } from "../../../lib/types";
 import { db } from "../../db/pool";
 import { cardTable, deckTable } from "../../db/schema";
@@ -12,8 +16,9 @@ import {
   createPresignedUrl,
   uploadFile as uploadFileToR2,
 } from "../../utils/r2";
-import { and, eq, lt, sql } from "drizzle-orm";
-import type { SelectCard } from "../../db/types";
+import { and, eq, sql } from "drizzle-orm";
+import { createCardSchema } from "../../db/types";
+import type { z } from "zod";
 
 const { window } = new JSDOM("<!DOCTYPE html>");
 const domPurify = DOMPurify(window);
@@ -29,13 +34,13 @@ function processView(
   files: File[],
   _filesMetadata: string,
 ): Result<{ markdown: string; files: Promise<string>[] }, Error> {
-  let markdown = domPurify.sanitize(_markdown, {
+  let markdown = domPurify.sanitize(JSON.parse(_markdown), {
     ALLOW_UNKNOWN_PROTOCOLS: true,
   });
   const filesMetadata = JSON.parse(_filesMetadata) as { url: string }[];
   const filteredFiles: Promise<string>[] = [];
   // NOTE: code should work  for  front and back markdown,  save keys as  string.
-  // NOTE: Check size of files do not exceed limit.
+  // TODO: Check size of files do not exceed limit.
   for (let i = 0; i < filesMetadata.length; i++) {
     const fileMetadata = filesMetadata[i];
     const file = files[i];
@@ -61,14 +66,15 @@ function processView(
   };
 }
 
-deckRoute.post("/:deckId/card", async (c) => {
-  // TODO: check user has access to deck
-  const formData = await c.req.formData();
+async function idk(
+  formData: FormData,
+  deckId: string,
+): Promise<Result<z.infer<typeof createCardSchema>, Error>> {
   const newCard = {} as Record<string, unknown>;
   const entries = [...formData.entries()];
   for (const [k, v] of entries) {
     if (typeof v !== "string") {
-      return;
+      continue;
     }
     if (v === "undefined") {
       newCard[k] = undefined;
@@ -77,41 +83,171 @@ deckRoute.post("/:deckId/card", async (c) => {
     }
   }
 
-  const frontViewResult = processView(
-    formData.get("frontViewMarkdown") as string,
-    formData.getAll("frontViewFiles") as unknown as File[],
-    formData.get("frontFiles") as string,
-  );
-  const backViewResult = processView(
-    formData.get("backViewMarkdown") as string,
-    formData.getAll("backViewFiles") as unknown as File[],
-    formData.get("backFiles") as string,
-  );
-  if (!frontViewResult.success || !backViewResult.success) {
-    return c.json({ message: "invalid data" }, 400);
+  const frontViewResult = formData.get("frontMarkdown")
+    ? processView(
+        formData.get("frontMarkdown") as string,
+        formData.getAll("frontFiles") as unknown as File[],
+        formData.get("frontFilesMetadata") as string,
+      )
+    : null;
+  if (frontViewResult && !frontViewResult.success) {
+    return {
+      success: false,
+      error: new Error("Could not parse markdown"),
+    };
   }
-  const keysResult = await Promise.allSettled([
-    ...frontViewResult.data.files,
-    ...backViewResult.data.files,
-  ]);
-  const frontKeys = keysResult
-    .slice(0, frontViewResult.data.files.length)
-    .filter((key) => key.status === "fulfilled")
-    .map((key) => key.value);
-  const backKeys = keysResult
-    .slice(frontViewResult.data.files.length)
-    .filter((key) => key.status === "fulfilled")
-    .map((key) => key.value);
-  await db.insert(cardTable).values({
+  const backViewResult = formData.get("backMarkdown")
+    ? processView(
+        formData.get("backMarkdown") as string,
+        formData.getAll("backFiles") as unknown as File[],
+        formData.get("backFilesMetadata") as string,
+      )
+    : null;
+  if (backViewResult && !backViewResult.success) {
+    return {
+      success: false,
+      error: new Error("Could not parse markdown"),
+    };
+  }
+
+  const keys = [];
+  if (frontViewResult) {
+    keys.push(...frontViewResult.data.files);
+  }
+  if (backViewResult) {
+    keys.push(...backViewResult.data.files);
+  }
+  const keysResult = await Promise.allSettled(keys);
+
+  let frontKeys: string[] = [];
+  let backKeys: string[] = [];
+  if (frontViewResult) {
+    frontKeys = keysResult
+      .slice(0, frontViewResult.data.files.length)
+      .filter((key) => key.status === "fulfilled")
+      .map((key) => key.value);
+    if (backViewResult) {
+      backKeys = keysResult
+        .slice(frontViewResult.data.files.length)
+        .filter((key) => key.status === "fulfilled")
+        .map((key) => key.value);
+    }
+  }
+  if (backViewResult) {
+    backKeys = keysResult
+      .filter((key) => key.status === "fulfilled")
+      .map((key) => key.value);
+  }
+
+  const newCardResult = createCardSchema.safeParse({
     ...newCard,
     frontFiles: JSON.stringify(frontKeys),
     backFiles: JSON.stringify(backKeys),
-    deckId: c.req.param("deckId"),
-    frontMarkdown: frontViewResult.data.markdown,
-    backMarkdown: backViewResult.data.markdown,
+    deckId: deckId,
+    frontMarkdown: frontViewResult?.data.markdown ?? JSON.stringify([]),
+    backMarkdown: backViewResult?.data.markdown ?? JSON.stringify([]),
     last_review: newCard.last_review ? newCard.last_review : null,
-  } as SelectCard);
+  });
+  return newCardResult;
+}
+
+deckRoute.post("/:deckId/card", async (c) => {
+  // TODO: check user has access to deck
+  const newCardResult = await idk(
+    await c.req.formData(),
+    c.req.param("deckId"),
+  );
+  if (!newCardResult.success) {
+    return c.json({
+      message: "Invalid data",
+    });
+  }
+  await db.insert(cardTable).values(newCardResult.data);
   return c.json({ message: "completed" });
+});
+
+deckRoute.delete("/:deckId/card/:cardId", async (c) => {
+  const loggedInUser = c.get("user");
+  if (!loggedInUser) {
+    return c.json({ message: "Unauthorized" }, 403);
+  }
+
+  const deckId = c.req.param("deckId");
+  const cardId = c.req.param("cardId");
+
+  try {
+    // TODO: we probably need a join with deckTable
+    const result = await db
+      .delete(cardTable)
+      .where(
+        and(
+          eq(cardTable.id, cardId),
+          eq(cardTable.deckId, deckId),
+          eq(deckTable.userId, loggedInUser.id),
+        ),
+      );
+
+    if (result.rowsAffected === 0) {
+      return c.json(
+        { message: "Card not found or you don't have permission to delete it" },
+        404,
+      );
+    }
+
+    return c.json({ message: "Card deleted successfully" });
+  } catch (error) {
+    console.error("Error deleting card:", error);
+    return c.json(
+      { message: "An error occurred while deleting the card" },
+      500,
+    );
+  }
+});
+
+// Update card
+deckRoute.put("/:deckId/card/:cardId", async (c) => {
+  const loggedInUser = c.get("user");
+  if (!loggedInUser) {
+    return c.json({ message: "Unauthorized" }, 403);
+  }
+
+  const deckId = c.req.param("deckId");
+  const cardId = c.req.param("cardId");
+  const submission = parseWithZod(await c.req.json(), {
+    schema: updateCardSchema,
+  });
+
+  if (submission.status !== "success") {
+    return c.json(submission.reply(), 400);
+  }
+
+  try {
+    const result = await db
+      .update(cardTable)
+      .set(submission.value)
+      .where(
+        and(
+          eq(cardTable.id, cardId),
+          eq(cardTable.deckId, deckId),
+          eq(deckTable.userId, loggedInUser.id),
+        ),
+      );
+
+    if (result.rowsAffected === 0) {
+      return c.json(
+        { message: "Card not found or you don't have permission to update it" },
+        404,
+      );
+    }
+
+    return c.json({ message: "Card updated successfully" });
+  } catch (error) {
+    console.error("Error updating card:", error);
+    return c.json(
+      { message: "An error occurred while updating the card" },
+      500,
+    );
+  }
 });
 
 deckRoute.get("/:deckId/review", async (c) => {
@@ -183,7 +319,7 @@ deckRoute.get("/:deckId/review", async (c) => {
   const updatedCards = await Promise.allSettled(promises);
   for (const updatedCard of updatedCards) {
     if (updatedCard.status === "rejected") {
-      console.error(updatedCard.reason)
+      console.error(updatedCard.reason);
       return c.json(
         {
           message: "Could not process card",
@@ -195,9 +331,46 @@ deckRoute.get("/:deckId/review", async (c) => {
   return c.json(cards);
 });
 
-// deckRoute.put("/:deckId/card/:cardId", async (c) => {
-//
-// });
+// Update deck info
+deckRoute.put("/:deckId", async (c) => {
+  const loggedInUser = c.get("user");
+  if (!loggedInUser) {
+    return c.json({ message: "Unauthorized" }, 403);
+  }
+
+  const deckId = c.req.param("deckId");
+  const submission = parseWithZod(await c.req.json(), {
+    schema: updateDeckSchema,
+  });
+
+  if (submission.status !== "success") {
+    return c.json(submission.reply(), 400);
+  }
+
+  try {
+    const result = await db
+      .update(deckTable)
+      .set(submission.value)
+      .where(
+        and(eq(deckTable.id, deckId), eq(deckTable.userId, loggedInUser.id)),
+      );
+
+    if (result.rowsAffected === 0) {
+      return c.json(
+        { message: "Deck not found or you don't have permission to update it" },
+        404,
+      );
+    }
+
+    return c.json({ message: "Deck updated successfully" });
+  } catch (error) {
+    console.error("Error updating deck:", error);
+    return c.json(
+      { message: "An error occurred while updating the deck" },
+      500,
+    );
+  }
+});
 
 deckRoute.get("/", async (c) => {
   const loggedInUser = c.get("user");
@@ -245,6 +418,33 @@ deckRoute.post("/", async (c) => {
     return c.json(
       {
         message: "Something went wrong, please try again.",
+      },
+      400,
+    );
+  }
+});
+deckRoute.delete("/:deckId", async (c) => {
+  const loggedInUser = c.get("user");
+  if (!loggedInUser) {
+    return c.json(null, 403);
+  }
+  try {
+    await db
+      .delete(deckTable)
+      .where(
+        and(
+          eq(deckTable.id, c.req.param("deckId")),
+          eq(deckTable.userId, loggedInUser.id),
+        ),
+      );
+    return c.json({
+      message: "completed",
+    });
+  } catch (err) {
+    console.error(err);
+    return c.json(
+      {
+        message: "completed",
       },
       400,
     );

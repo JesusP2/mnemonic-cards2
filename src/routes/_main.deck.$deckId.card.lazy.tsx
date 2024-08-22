@@ -16,6 +16,7 @@ import { queryClient } from '../lib/query-client';
 import type { UserDeckDashboard } from '../lib/types';
 import { createUlid } from '../server/utils/ulid';
 import { createEmptyCard, Rating } from 'ts-fsrs';
+import { db } from '../lib/indexdb';
 
 export const Route = createLazyFileRoute('/_main/deck/$deckId/card')({
   component: CreateCard,
@@ -32,8 +33,7 @@ function CreateCard() {
   const cardRef = useRef<null | HTMLDivElement>(null);
   const [cursorPosition, setCursorPosition] = useState(0);
 
-  const markdown =
-    currentView === 'front' ? frontMarkdown : backMarkdown;
+  const markdown = currentView === 'front' ? frontMarkdown : backMarkdown;
   const files = currentView === 'front' ? frontFiles : backFiles;
   function setMarkdown(str: string) {
     return currentView === 'front'
@@ -44,25 +44,39 @@ function CreateCard() {
   function setFiles(
     files: FileElement[] | ((files: FileElement[]) => FileElement[]),
   ) {
-    return currentView === 'front'
-      ? setFrontFiles(files)
-      : setBackFiles(files);
+    return currentView === 'front' ? setFrontFiles(files) : setBackFiles(files);
   }
 
   async function onSubmit() {
-    const formData = new FormData();
     const newCard = {
       id: createUlid(),
       deckId: params.deckId,
       frontMarkdown,
       backMarkdown,
-      frontFilesMetadata: frontFiles.map((file) => ({ url: file.url })),
-      backFilesMetadata: backFiles.map((file) => ({ url: file.url })),
+      frontFilesMetadata: [] as string[],
+      backFilesMetadata: [] as string[],
       updatedAt: new Date().getTime(),
       createdAt: new Date().getTime(),
       ...createEmptyCard(),
       rating: Rating.Again,
     };
+    await db.transaction('rw', 'files', async (tx) => {
+      for (const { file, url } of frontFiles) {
+        const extension = file.type.split('/')[1];
+        const key = `${createUlid()}.${extension}`;
+        newCard.frontMarkdown = newCard.frontMarkdown.replaceAll(url, key);
+        newCard.frontFilesMetadata.push(key)
+        await tx.files.put({ file, key });
+      }
+      for (const { file, url } of backFiles) {
+        const extension = file.type.split('/')[1];
+        const key = `${createUlid()}.${extension}`;
+        newCard.backMarkdown = newCard.backMarkdown.replaceAll(url, key);
+        newCard.backFilesMetadata.push(key)
+        await tx.files.put({ file, key });
+      }
+    });
+    console.log(newCard)
 
     queryClient.setQueryData(['user-decks'], (oldData: UserDeckDashboard[]) => {
       return oldData.map((data) => {
@@ -82,6 +96,8 @@ function CreateCard() {
         return [newCard];
       },
     );
+
+    const formData = new FormData();
     for (const [k, v] of Object.entries(newCard)) {
       if (v instanceof Date) {
         formData.append(k, JSON.stringify(v.getTime()));
@@ -107,8 +123,7 @@ function CreateCard() {
   }
 
   async function handleViewChange() {
-    const markdown =
-      currentView === 'front' ? backMarkdown : frontMarkdown;
+    const markdown = currentView === 'front' ? backMarkdown : frontMarkdown;
     if (cardRef.current) {
       const newMarkdown = DOMPurify.sanitize(await marked.parse(markdown), {
         ALLOW_UNKNOWN_PROTOCOLS: true,
@@ -197,4 +212,3 @@ ${newValuePart2}`;
     </div>
   );
 }
-

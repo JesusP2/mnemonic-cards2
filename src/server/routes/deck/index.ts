@@ -29,7 +29,7 @@ async function uploadFile(file: File, key: string) {
   return uploadFileToR2(Buffer.from(await file.arrayBuffer()), key);
 }
 
-function processView(
+function sanitizeTextAndReplaceUrlsWithKeys(
   _markdown: string,
   files: File[],
   _filesMetadata: string,
@@ -37,7 +37,7 @@ function processView(
   let markdown = domPurify.sanitize(JSON.parse(_markdown), {
     ALLOW_UNKNOWN_PROTOCOLS: true,
   });
-  const filesMetadata = JSON.parse(_filesMetadata) as { url: string }[];
+  const filesMetadata = JSON.parse(_filesMetadata) as string[];
   const filteredFiles: Promise<string>[] = [];
   // NOTE: code should work  for  front and back markdown,  save keys as  string.
   // TODO: Check size of files do not exceed limit.
@@ -50,11 +50,11 @@ function processView(
         error: new Error("file or fileMetada not found"),
       };
     }
-    if (markdown.indexOf(fileMetadata.url) !== -1) {
+    if (markdown.indexOf(fileMetadata) !== -1) {
       const extension = file.type.split("/")[1];
       const key = `${createUlid()}.${extension}`;
       filteredFiles.push(uploadFile(file, key));
-      markdown = markdown.replaceAll(fileMetadata.url, key);
+      markdown = markdown.replaceAll(fileMetadata, key);
     }
   }
   return {
@@ -83,8 +83,9 @@ async function idk(
     }
   }
 
+  // TODO: check empty strings
   const frontViewResult = formData.get("frontMarkdown")
-    ? processView(
+    ? sanitizeTextAndReplaceUrlsWithKeys(
         formData.get("frontMarkdown") as string,
         formData.getAll("frontFiles") as unknown as File[],
         formData.get("frontFilesMetadata") as string,
@@ -97,7 +98,7 @@ async function idk(
     };
   }
   const backViewResult = formData.get("backMarkdown")
-    ? processView(
+    ? sanitizeTextAndReplaceUrlsWithKeys(
         formData.get("backMarkdown") as string,
         formData.getAll("backFiles") as unknown as File[],
         formData.get("backFilesMetadata") as string,
@@ -133,12 +134,14 @@ async function idk(
         .map((key) => key.value);
     }
   }
-  if (backViewResult) {
+  if (backViewResult && !backKeys.length) {
     backKeys = keysResult
       .filter((key) => key.status === "fulfilled")
       .map((key) => key.value);
   }
 
+  console.log('front keys:', frontKeys)
+  console.log('back keys:', backKeys)
   const newCardResult = createCardSchema.safeParse({
     ...newCard,
     frontFiles: JSON.stringify(frontKeys),
@@ -262,8 +265,8 @@ deckRoute.get("/:deckId/review", async (c) => {
       deckId: cardTable.deckId,
       frontMarkdown: cardTable.frontMarkdown,
       backMarkdown: cardTable.backMarkdown,
-      frontFiles: cardTable.frontFiles,
-      backFiles: cardTable.backFiles,
+      frontFilesMetadata: cardTable.frontFiles,
+      backFilesMetadata: cardTable.backFiles,
       due: cardTable.due,
       stability: cardTable.stability,
       difficulty: cardTable.difficulty,
@@ -286,31 +289,31 @@ deckRoute.get("/:deckId/review", async (c) => {
         eq(deckTable.id, c.req.param("deckId")),
       ),
     );
-  // .limit(2);
+
   const promises = cards.map(async (card) => {
-    const frontFiles = JSON.parse(card.frontFiles);
-    const frontUrlsPromises = frontFiles.map((file: string) =>
+    const frontFilesMetadata = JSON.parse(card.frontFilesMetadata);
+    const frontFilesUrlPromises = frontFilesMetadata.map((file: string) =>
       createPresignedUrl(file),
     ) as Promise<string>[];
-    const backFiles = JSON.parse(card.backFiles);
-    const backUrlsPromises = backFiles.map((file: string) =>
+    const backFilesMetadata = JSON.parse(card.backFilesMetadata);
+    const backFilesUrlsPromises = backFilesMetadata.map((file: string) =>
       createPresignedUrl(file),
     ) as Promise<string>[];
     const links = await Promise.all([
-      ...frontUrlsPromises,
-      ...backUrlsPromises,
+      ...frontFilesUrlPromises,
+      ...backFilesUrlsPromises,
     ]);
-    const frontLinks = links.slice(0, frontFiles.length);
-    const backLinks = links.slice(backFiles.length);
-    for (let i = 0; i < frontFiles.length; i++) {
+    const frontLinks = links.slice(0, frontFilesMetadata.length);
+    const backLinks = links.slice(backFilesMetadata.length);
+    for (let i = 0; i < frontFilesMetadata.length; i++) {
       card.frontMarkdown = card.frontMarkdown.replaceAll(
-        frontFiles[i],
+        frontFilesMetadata[i],
         frontLinks[i] as string,
       );
     }
-    for (let i = 0; i < backFiles.length; i++) {
+    for (let i = 0; i < backFilesMetadata.length; i++) {
       card.backMarkdown = card.backMarkdown.replaceAll(
-        backFiles[i],
+        backFilesMetadata[i],
         backLinks[i] as string,
       );
     }
@@ -328,7 +331,14 @@ deckRoute.get("/:deckId/review", async (c) => {
       );
     }
   }
-  return c.json(cards);
+
+  return c.json(
+    cards.map((card) => ({
+      ...card,
+      frontFilesMetadata: JSON.parse(card.frontFilesMetadata),
+      backFilesMetadata: JSON.parse(card.backFilesMetadata),
+    })),
+  );
 });
 
 // Update deck info

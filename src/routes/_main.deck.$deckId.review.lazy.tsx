@@ -6,43 +6,74 @@ import { useEffect, useState } from 'react';
 import { marked } from 'marked';
 import { Button } from '../components/ui/button';
 import { type Card, type Grade, Rating } from 'ts-fsrs';
-import type { SelectCard } from '../server/db/types';
+import type { ClientSideCard } from '../server/db/types';
 import type { UserDeckDashboard } from '../lib/types';
 import { fsrsScheduler } from '../lib/fsrs';
 import { queryClient } from '../lib/query-client';
+import { db } from '../lib/indexdb';
 
 export const Route = createLazyFileRoute('/_main/deck/$deckId/review')({
   component: Review,
 });
+function convertFileToBase64(file: File) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+
+    reader.onloadend = () => {
+      resolve(reader.result as string);
+    };
+
+    reader.onerror = (error) => {
+      reject(error);
+    };
+
+    reader.readAsDataURL(file);
+  });
+}
+
+async function transformKeysToUrls(keys: string[]) {
+  const results = await Promise.allSettled(
+    keys.map((key) => db.files.get(key)),
+  );
+  const fulfilled = results.filter(
+    (result) => result.status === 'fulfilled' && result.value,
+  ) as PromiseFulfilledResult<{ file: File; key: string }>[];
+  return fulfilled.map(async ({ value }) => ({
+    key: value.key,
+    url: (await convertFileToBase64(value.file)) as string,
+  }));
+}
 
 function Review() {
   const params = useParams({ from: '/_main/deck/$deckId/review' });
   const query = useQuery(deckReviewQueryOptions(params.deckId));
-  const [currentCard, setCurrentCard] = useState<SelectCard | null>();
+  const [currentCard, setCurrentCard] = useState<ClientSideCard | null>();
   const [isAnswerBeingShown, showAnswer] = useState(false);
 
   useEffect(() => {
-    if (query.data) {
-      const card = query.data.find(
-        (card) => card.due && new Date(card.due).getTime() < new Date().getTime(),
-      );
-      setCurrentCard(card);
+    if (!query.data) return;
+    const card = query.data.find(
+      (card) => card.due && new Date(card.due).getTime() < new Date().getTime(),
+    );
+    if (!card) {
+      return;
     }
+    transformKeysToUrls(card.frontFilesMetadata)
+      .then((promises) => Promise.all(promises))
+      .then((keyUrlPairs) => {
+        for (const { url, key } of keyUrlPairs) {
+          card.frontMarkdown = card.frontMarkdown.replaceAll(key, url);
+        }
+        return transformKeysToUrls(card.backFilesMetadata);
+      })
+      .then((promises) => Promise.all(promises))
+      .then((keyUrlPairs) => {
+        for (const { url, key } of keyUrlPairs) {
+          card.backMarkdown = card.backMarkdown.replaceAll(key, url);
+        }
+        setCurrentCard(card);
+      });
   }, [query.data]);
-
-  function renderMarkdownToHTML() {
-    if (!query.data || !currentCard)
-      return {
-        __html: '',
-      };
-    const markdown =
-      currentCard[isAnswerBeingShown ? 'backMarkdown' : 'frontMarkdown'];
-    if (markdown) {
-      return {
-        __html: DOMPurify.sanitize(marked.parse(markdown) as string),
-      };
-    }
-  }
 
   async function updateCard(grade: Grade) {
     if (!currentCard) {
@@ -51,7 +82,7 @@ function Review() {
     const updatedCard = fsrsScheduler.repeat(
       currentCard as unknown as Card,
       new Date(),
-    )[grade].card as unknown as SelectCard;
+    )[grade].card as unknown as ClientSideCard;
     updatedCard.rating = grade;
     const ratingToRatingType = {
       1: 'Again',
@@ -79,7 +110,7 @@ function Review() {
 
     queryClient.setQueryData(
       ['deck-review-', params.deckId],
-      (oldData: SelectCard[]) => {
+      (oldData: ClientSideCard[]) => {
         const idx = oldData.findIndex((card) => card.id === currentCard.id);
         return oldData.splice(idx, 1, { ...updatedCard });
       },
@@ -101,7 +132,15 @@ function Review() {
     <>
       <div
         // biome-ignore lint/security/noDangerouslySetInnerHtml: <explanation>
-        dangerouslySetInnerHTML={renderMarkdownToHTML()}
+        dangerouslySetInnerHTML={{
+          __html: DOMPurify.sanitize(
+            marked.parse(
+              currentCard?.[
+                isAnswerBeingShown ? 'backMarkdown' : 'frontMarkdown'
+              ] || '',
+            ) as string,
+          ),
+        }}
         className="max-w-xl mx-auto h-[calc(100vh-187px)] border border-zinc-700 rounded-sm p-2 overflow-auto prose dark:prose-invert"
       />
       {!isAnswerBeingShown ? (

@@ -58,21 +58,34 @@ function Review() {
     if (!card) {
       return;
     }
-    transformKeysToUrls(card.frontFilesMetadata)
-      .then((promises) => Promise.all(promises))
-      .then((keyUrlPairs) => {
-        for (const { url, key } of keyUrlPairs) {
-          card.frontMarkdown = card.frontMarkdown.replaceAll(key, url);
-        }
-        return transformKeysToUrls(card.backFilesMetadata);
-      })
-      .then((promises) => Promise.all(promises))
-      .then((keyUrlPairs) => {
-        for (const { url, key } of keyUrlPairs) {
-          card.backMarkdown = card.backMarkdown.replaceAll(key, url);
-        }
-        setCurrentCard(card);
-      });
+    if (
+      (card.frontFilesMetadata.length &&
+        !card.frontMarkdown.includes(
+          'https://mnemonic-cards.13e14d558cce799d0040255703bae354.r2.cloudflarestorage.com',
+        )) ||
+      (card.backFilesMetadata.length &&
+        !card.backMarkdown.includes(
+          'https://mnemonic-cards.13e14d558cce799d0040255703bae354.r2.cloudflarestorage.com',
+        ))
+    ) {
+      transformKeysToUrls(card.frontFilesMetadata)
+        .then((promises) => Promise.all(promises))
+        .then((keyUrlPairs) => {
+          for (const { url, key } of keyUrlPairs) {
+            card.frontMarkdown = card.frontMarkdown.replaceAll(key, url);
+          }
+          return transformKeysToUrls(card.backFilesMetadata);
+        })
+        .then((promises) => Promise.all(promises))
+        .then((keyUrlPairs) => {
+          for (const { url, key } of keyUrlPairs) {
+            card.backMarkdown = card.backMarkdown.replaceAll(key, url);
+          }
+          setCurrentCard(card);
+        });
+    } else {
+      setCurrentCard(card);
+    }
   }, [query.data]);
 
   async function updateCard(grade: Grade) {

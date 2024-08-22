@@ -76,7 +76,6 @@ function CreateCard() {
         await tx.files.put({ file, key });
       }
     });
-    console.log(newCard)
 
     queryClient.setQueryData(['user-decks'], (oldData: UserDeckDashboard[]) => {
       return oldData.map((data) => {

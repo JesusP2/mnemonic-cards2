@@ -20,50 +20,10 @@ import { and, eq, sql } from "drizzle-orm";
 import { createCardSchema } from "../../db/types";
 import type { z } from "zod";
 
-const { window } = new JSDOM("<!DOCTYPE html>");
-const domPurify = DOMPurify(window);
-
 export const deckRoute = new Hono();
 
 async function uploadFile(file: File, key: string) {
   return uploadFileToR2(Buffer.from(await file.arrayBuffer()), key);
-}
-
-function sanitizeTextAndReplaceUrlsWithKeys(
-  _markdown: string,
-  files: File[],
-  _filesMetadata: string,
-): Result<{ markdown: string; files: Promise<string>[] }, Error> {
-  let markdown = domPurify.sanitize(JSON.parse(_markdown), {
-    ALLOW_UNKNOWN_PROTOCOLS: true,
-  });
-  const filesMetadata = JSON.parse(_filesMetadata) as string[];
-  const filteredFiles: Promise<string>[] = [];
-  // NOTE: code should work  for  front and back markdown,  save keys as  string.
-  // TODO: Check size of files do not exceed limit.
-  for (let i = 0; i < filesMetadata.length; i++) {
-    const fileMetadata = filesMetadata[i];
-    const file = files[i];
-    if (!fileMetadata || !file) {
-      return {
-        success: false,
-        error: new Error("file or fileMetada not found"),
-      };
-    }
-    if (markdown.indexOf(fileMetadata) !== -1) {
-      const extension = file.type.split("/")[1];
-      const key = `${createUlid()}.${extension}`;
-      filteredFiles.push(uploadFile(file, key));
-      markdown = markdown.replaceAll(fileMetadata, key);
-    }
-  }
-  return {
-    success: true,
-    data: {
-      markdown,
-      files: filteredFiles,
-    },
-  };
 }
 
 async function idk(
@@ -82,73 +42,32 @@ async function idk(
       newCard[k] = JSON.parse(v);
     }
   }
-
-  // TODO: check empty strings
-  const frontViewResult = formData.get("frontMarkdown")
-    ? sanitizeTextAndReplaceUrlsWithKeys(
-        formData.get("frontMarkdown") as string,
-        formData.getAll("frontFiles") as unknown as File[],
-        formData.get("frontFilesMetadata") as string,
-      )
-    : null;
-  if (frontViewResult && !frontViewResult.success) {
-    return {
-      success: false,
-      error: new Error("Could not parse markdown"),
-    };
-  }
-  const backViewResult = formData.get("backMarkdown")
-    ? sanitizeTextAndReplaceUrlsWithKeys(
-        formData.get("backMarkdown") as string,
-        formData.getAll("backFiles") as unknown as File[],
-        formData.get("backFilesMetadata") as string,
-      )
-    : null;
-  if (backViewResult && !backViewResult.success) {
-    return {
-      success: false,
-      error: new Error("Could not parse markdown"),
-    };
-  }
-
-  const keys = [];
-  if (frontViewResult) {
-    keys.push(...frontViewResult.data.files);
-  }
-  if (backViewResult) {
-    keys.push(...backViewResult.data.files);
-  }
-  const keysResult = await Promise.allSettled(keys);
-
-  let frontKeys: string[] = [];
-  let backKeys: string[] = [];
-  if (frontViewResult) {
-    frontKeys = keysResult
-      .slice(0, frontViewResult.data.files.length)
-      .filter((key) => key.status === "fulfilled")
-      .map((key) => key.value);
-    if (backViewResult) {
-      backKeys = keysResult
-        .slice(frontViewResult.data.files.length)
-        .filter((key) => key.status === "fulfilled")
-        .map((key) => key.value);
+  async function uploadFiles(metadata: string[], files: File[]) {
+    if (metadata.length !== files.length) {
+      throw new Error("arrays must be of the same length");
     }
+    const promises = [];
+    for (let i = 0; i < metadata.length; i++) {
+      promises.push(uploadFile(files[i] as File, metadata[i] as string));
+    }
+    return Promise.allSettled(promises);
   }
-  if (backViewResult && !backKeys.length) {
-    backKeys = keysResult
-      .filter((key) => key.status === "fulfilled")
-      .map((key) => key.value);
-  }
+  await uploadFiles(
+    [
+      ...(newCard.frontFilesMetadata as string[]),
+      ...(newCard.backFilesMetadata as string[]),
+    ],
+    [
+      ...(formData.getAll("frontFiles") as File[]),
+      ...(formData.getAll("backFiles") as File[]),
+    ],
+  );
 
-  console.log('front keys:', frontKeys)
-  console.log('back keys:', backKeys)
   const newCardResult = createCardSchema.safeParse({
     ...newCard,
-    frontFiles: JSON.stringify(frontKeys),
-    backFiles: JSON.stringify(backKeys),
     deckId: deckId,
-    frontMarkdown: frontViewResult?.data.markdown ?? JSON.stringify([]),
-    backMarkdown: backViewResult?.data.markdown ?? JSON.stringify([]),
+    frontFiles: JSON.stringify(newCard.frontFilesMetadata),
+    backFiles: JSON.stringify(newCard.backFilesMetadata),
     last_review: newCard.last_review ? newCard.last_review : null,
   });
   return newCardResult;

@@ -66,6 +66,7 @@ export const updateCardSchema = z.object({
 });
 
 export const createDeckSchema = z.object({
+  id: z.string().ulid(),
   name: z.string(),
   description: z.string().optional(),
 });

@@ -89,17 +89,9 @@ export const columns: ColumnDef<UserDeckDashboard>[] = [
       });
       const handleDeleteDeck = () => {
         deleteMutation.mutateAsync(row.original.id).then(() => {
-          console.log(row)
-          // queryClient.invalidateQueries({
-          //   queryKey: ['deck-review-', row.original.id],
-          // });
-          // queryClient.removeQueries({
-          //   queryKey: ['deck-review-', row.original.id],
-          // });
           queryClient.setQueryData(
             ['user-decks'],
             (oldData: Record<string, unknown>[]) => {
-              console.log(oldData)
               return oldData.filter((record) => record.id !== row.original.id);
             },
           );

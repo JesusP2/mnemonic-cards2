@@ -22,6 +22,7 @@ import { Label } from './ui/label';
 import { Textarea } from './ui/textarea';
 
 export function CreateDeck() {
+  const [isOpen, setOpen] = useState(false);
   const [lastResult, setLastResult] = useState(null);
   const queryClient = useQueryClient();
   const createDeckMutation = useMutation({
@@ -56,8 +57,8 @@ export function CreateDeck() {
     onSubmit: async (e, context) => {
       e.preventDefault();
       createDeckMutation.mutateAsync(context.formData).then(() => {
-        queryClient.invalidateQueries({ queryKey: ['user-decks'] });
-      });
+        return queryClient.invalidateQueries({ queryKey: ['user-decks'] });
+      }).then(() => setOpen(false));
     },
     defaultValue: {
       name: '',
@@ -65,8 +66,8 @@ export function CreateDeck() {
     },
   });
   return (
-    <Dialog>
-      <DialogTrigger asChild><Button variant="outline">+</Button></DialogTrigger>
+    <Dialog open={isOpen} onOpenChange={open => setOpen(open)}>
+      <DialogTrigger asChild><Button variant="outline" onClick={() => setOpen(true)}>+</Button></DialogTrigger>
       <DialogContent className="sm:max-w-[425px]" aria-describedby={undefined}>
         <DialogHeader>
           <DialogTitle>Create new deck</DialogTitle>

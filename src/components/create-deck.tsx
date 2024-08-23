@@ -65,6 +65,7 @@ export function CreateDeck() {
       queryClient.setQueryData(['user-decks'], (oldData: unknown) => {
         const newDeck = {
           name: context.formData.get('name'),
+          id: deckId,
           easy: 0,
           good: 0,
           hard: 0,

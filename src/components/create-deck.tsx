@@ -60,6 +60,8 @@ export function CreateDeck() {
       e.preventDefault();
       const deckId = createUlid();
       context.formData.set('id', deckId);
+      setOpen(false);
+      toast.success('Deck created');
       queryClient.setQueryData(['user-decks'], (oldData: unknown) => {
         const newDeck = {
           name: context.formData.get('name'),
@@ -73,10 +75,7 @@ export function CreateDeck() {
         }
         return [newDeck];
       });
-      createDeckMutation
-        .mutateAsync(context.formData)
-        .then(() => toast.success('Deck created'))
-        .then(() => setOpen(false));
+      createDeckMutation.mutate(context.formData);
     },
     defaultValue: {
       name: '',

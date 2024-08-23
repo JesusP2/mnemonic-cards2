@@ -20,6 +20,7 @@ import {
 import { Input } from './ui/input';
 import { Label } from './ui/label';
 import { Textarea } from './ui/textarea';
+import { toast } from 'sonner';
 
 export function CreateDeck() {
   const [isOpen, setOpen] = useState(false);
@@ -57,6 +58,7 @@ export function CreateDeck() {
     onSubmit: async (e, context) => {
       e.preventDefault();
       createDeckMutation.mutateAsync(context.formData).then(() => {
+        toast.success('Deck created')
         return queryClient.invalidateQueries({ queryKey: ['user-decks'] });
       }).then(() => setOpen(false));
     },

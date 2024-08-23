@@ -184,9 +184,7 @@ export function DataTableDemo() {
           className="max-w-sm"
         />
         <div className="flex gap-x-4">
-          <CreateDeck>
-            <Button variant="outline">+</Button>
-          </CreateDeck>
+          <CreateDeck />
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="outline">

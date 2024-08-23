@@ -8,7 +8,7 @@ export const Route = createLazyFileRoute('/_main/me')({
 function Me() {
   return (
     <div className="container mx-auto py-10">
-      <h1>Decks</h1>
+      <h1 className="font-bold">Decks</h1>
       <DataTableDemo />
     </div>
   );

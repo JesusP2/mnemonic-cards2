@@ -21,7 +21,7 @@ import { Input } from './ui/input';
 import { Label } from './ui/label';
 import { Textarea } from './ui/textarea';
 
-export function CreateDeck({ children }: { children: ReactNode }) {
+export function CreateDeck() {
   const [lastResult, setLastResult] = useState(null);
   const queryClient = useQueryClient();
   const createDeckMutation = useMutation({

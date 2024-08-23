@@ -21,6 +21,7 @@ import { Input } from './ui/input';
 import { Label } from './ui/label';
 import { Textarea } from './ui/textarea';
 import { toast } from 'sonner';
+import { createUlid } from '../server/utils/ulid';
 
 export function CreateDeck() {
   const [isOpen, setOpen] = useState(false);
@@ -52,15 +53,30 @@ export function CreateDeck() {
     shouldRevalidate: 'onBlur',
     onValidate: ({ formData }) => {
       return parseWithZod(formData, {
-        schema: createDeckSchema,
+        schema: createDeckSchema.omit({ id: true }),
       });
     },
     onSubmit: async (e, context) => {
       e.preventDefault();
-      createDeckMutation.mutateAsync(context.formData).then(() => {
-        toast.success('Deck created')
-        return queryClient.invalidateQueries({ queryKey: ['user-decks'] });
-      }).then(() => setOpen(false));
+      const deckId = createUlid();
+      context.formData.set('id', deckId);
+      queryClient.setQueryData(['user-decks'], (oldData: unknown) => {
+        const newDeck = {
+          name: context.formData.get('name'),
+          easy: 0,
+          good: 0,
+          hard: 0,
+          again: 0,
+        };
+        if (Array.isArray(oldData)) {
+          return [...oldData, newDeck];
+        }
+        return [newDeck];
+      });
+      createDeckMutation
+        .mutateAsync(context.formData)
+        .then(() => toast.success('Deck created'))
+        .then(() => setOpen(false));
     },
     defaultValue: {
       name: '',
@@ -68,8 +84,12 @@ export function CreateDeck() {
     },
   });
   return (
-    <Dialog open={isOpen} onOpenChange={open => setOpen(open)}>
-      <DialogTrigger asChild><Button variant="outline" onClick={() => setOpen(true)}>+</Button></DialogTrigger>
+    <Dialog open={isOpen} onOpenChange={(open) => setOpen(open)}>
+      <DialogTrigger asChild>
+        <Button variant="outline" onClick={() => setOpen(true)}>
+          +
+        </Button>
+      </DialogTrigger>
       <DialogContent className="sm:max-w-[425px]" aria-describedby={undefined}>
         <DialogHeader>
           <DialogTitle>Create new deck</DialogTitle>

@@ -1,4 +1,8 @@
-import { createLazyFileRoute, useParams } from '@tanstack/react-router';
+import {
+  createLazyFileRoute,
+  useNavigate,
+  useParams,
+} from '@tanstack/react-router';
 import DOMPurify from 'dompurify';
 import { Image } from 'lucide-react';
 import { marked } from 'marked';
@@ -17,6 +21,7 @@ import type { UserDeckDashboard } from '../lib/types';
 import { createUlid } from '../server/utils/ulid';
 import { createEmptyCard, Rating } from 'ts-fsrs';
 import { db } from '../lib/indexdb';
+import { toast } from 'sonner';
 
 export const Route = createLazyFileRoute('/_main/deck/$deckId/card')({
   component: CreateCard,
@@ -24,6 +29,7 @@ export const Route = createLazyFileRoute('/_main/deck/$deckId/card')({
 
 type FileElement = z.infer<typeof fileSchema>;
 function CreateCard() {
+  const navigate = useNavigate({ from: '/deck/$deckId/card' });
   const params = useParams({ from: '/_main/deck/$deckId/card' });
   const [frontMarkdown, setFrontMarkdown] = useState('');
   const [backMarkdown, setbackMarkdown] = useState('');
@@ -65,14 +71,14 @@ function CreateCard() {
         const extension = file.type.split('/')[1];
         const key = `${createUlid()}.${extension}`;
         newCard.frontMarkdown = newCard.frontMarkdown.replaceAll(url, key);
-        newCard.frontFilesMetadata.push(key)
+        newCard.frontFilesMetadata.push(key);
         await tx.files.put({ file, key });
       }
       for (const { file, url } of backFiles) {
         const extension = file.type.split('/')[1];
         const key = `${createUlid()}.${extension}`;
         newCard.backMarkdown = newCard.backMarkdown.replaceAll(url, key);
-        newCard.backFilesMetadata.push(key)
+        newCard.backFilesMetadata.push(key);
         await tx.files.put({ file, key });
       }
     });
@@ -119,6 +125,8 @@ function CreateCard() {
       const error = await res.json();
       throw new Error(error.message);
     }
+    toast.success('Card created')
+    navigate({ to: '/me' });
   }
 
   async function handleViewChange() {

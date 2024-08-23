@@ -47,7 +47,7 @@ async function transformKeysToUrls(keys: string[]) {
 function Review() {
   const params = useParams({ from: '/_main/deck/$deckId/review' });
   const query = useQuery(deckReviewQueryOptions(params.deckId));
-  const [currentCard, setCurrentCard] = useState<ClientSideCard | null>();
+  const [currentCard, setCurrentCard] = useState<ClientSideCard | null>(null);
   const [isAnswerBeingShown, showAnswer] = useState(false);
 
   useEffect(() => {
@@ -140,6 +140,12 @@ function Review() {
     //   console.error('wrong');
     // }
   }
+  if (query.isLoading) {
+    return <div>loading...</div>;
+  }
+  if (currentCard === null) {
+    return <div>nothing to show</div>;
+  }
 
   return (
     <>
@@ -148,8 +154,8 @@ function Review() {
         dangerouslySetInnerHTML={{
           __html: DOMPurify.sanitize(
             marked.parse(
-              currentCard?.[
-                isAnswerBeingShown ? 'backMarkdown' : 'frontMarkdown'
+              currentCard[
+              isAnswerBeingShown ? 'backMarkdown' : 'frontMarkdown'
               ] || '',
             ) as string,
           ),

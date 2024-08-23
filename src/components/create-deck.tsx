@@ -66,7 +66,7 @@ export function CreateDeck({ children }: { children: ReactNode }) {
   });
   return (
     <Dialog>
-      <DialogTrigger asChild>{children}</DialogTrigger>
+      <DialogTrigger asChild><Button variant="outline">+</Button></DialogTrigger>
       <DialogContent className="sm:max-w-[425px]" aria-describedby={undefined}>
         <DialogHeader>
           <DialogTitle>Create new deck</DialogTitle>

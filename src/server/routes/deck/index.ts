@@ -1,7 +1,5 @@
 import { parseWithZod } from "@conform-to/zod";
-import DOMPurify from "dompurify";
 import { Hono } from "hono";
-import { JSDOM } from "jsdom";
 // import { createEmptyCard, Rating } from "ts-fsrs";
 import {
   createDeckSchema,
@@ -331,16 +329,15 @@ deckRoute.post("/", async (c) => {
     return c.json(submission.reply(), 400);
   }
   try {
-    const deckId = createUlid();
     await db.insert(deckTable).values({
-      id: deckId,
+      id: submission.value.id,
       userId: loggedInUser.id,
       private: 0,
       name: submission.value.name,
       description: submission.value.description,
     });
     return c.json({
-      deckId,
+      id: submission.value.id,
       name: submission.value.name,
     });
   } catch (err) {

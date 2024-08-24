@@ -11,25 +11,11 @@ import type { UserDeckDashboard } from '../lib/types';
 import { fsrsScheduler } from '../lib/fsrs';
 import { queryClient } from '../lib/query-client';
 import { db } from '../lib/indexdb';
+import { fileToBase64 } from '../lib/file-to-base64';
 
 export const Route = createLazyFileRoute('/_main/deck/$deckId/review')({
   component: Review,
 });
-function convertFileToBase64(file: File) {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-
-    reader.onloadend = () => {
-      resolve(reader.result as string);
-    };
-
-    reader.onerror = (error) => {
-      reject(error);
-    };
-
-    reader.readAsDataURL(file);
-  });
-}
 
 async function transformKeysToUrls(keys: string[]) {
   const results = await Promise.allSettled(
@@ -40,7 +26,7 @@ async function transformKeysToUrls(keys: string[]) {
   ) as PromiseFulfilledResult<{ file: File; key: string }>[];
   return fulfilled.map(async ({ value }) => ({
     key: value.key,
-    url: (await convertFileToBase64(value.file)) as string,
+    url: (await fileToBase64(value.file)) as string,
   }));
 }
 
@@ -92,29 +78,33 @@ function Review() {
     if (!currentCard) {
       return;
     }
-    const updatedCard = fsrsScheduler.repeat(
+    const newCard = fsrsScheduler.repeat(
       currentCard as unknown as Card,
       new Date(),
     )[grade].card as unknown as ClientSideCard;
-    updatedCard.rating = grade;
+    newCard.rating = grade;
     const ratingToRatingType = {
-      1: 'Again',
-      2: 'Hard',
-      3: 'Good',
-      4: 'Easy',
+      1: 'again',
+      2: 'hard',
+      3: 'good',
+      4: 'easy',
     } as const;
 
     const newRatingType = ratingToRatingType[grade] as keyof UserDeckDashboard;
-    const previousRatingType = ratingToRatingType[
+    const currentRatingType = ratingToRatingType[
       currentCard.rating as Grade
     ] as keyof UserDeckDashboard;
+
     queryClient.setQueryData(['user-decks'], (oldData: UserDeckDashboard[]) => {
       return oldData.map((data) => {
+        if (data.id === params.deckId && newRatingType === currentRatingType) {
+          return { ...data };
+        }
         if (data.id === params.deckId) {
           return {
             ...data,
             [newRatingType]: (data[newRatingType] as number) + 1,
-            [previousRatingType]: (data[previousRatingType] as number) - 1,
+            [currentRatingType]: (data[currentRatingType] as number) - 1,
           };
         }
         return data;
@@ -125,7 +115,8 @@ function Review() {
       ['deck-review-', params.deckId],
       (oldData: ClientSideCard[]) => {
         const idx = oldData.findIndex((card) => card.id === currentCard.id);
-        return oldData.splice(idx, 1, { ...updatedCard });
+        oldData.splice(idx, 1, { ...newCard });
+        return [...oldData];
       },
     );
 

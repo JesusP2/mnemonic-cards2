@@ -116,7 +116,6 @@ deckRoute.put("/:deckId/card/:cardId", async (c) => {
 
   const newFieldsResult = updateCardSchema.safeParse(await c.req.json());
   if (!newFieldsResult.success) {
-    console.error(newFieldsResult.error.format())
     return c.json({ message: "Unauthorized" }, 400);
   }
   const deckId = c.req.param("deckId");
@@ -127,7 +126,6 @@ deckRoute.put("/:deckId/card/:cardId", async (c) => {
     .where(
       and(eq(deckTable.id, deckId), eq(deckTable.userId, loggedInUser.id)),
     );
-  console.log(total, loggedInUser)
   if (!total?.count) {
     return c.json({ message: "Unauthorized" }, 400);
   }
@@ -208,7 +206,6 @@ deckRoute.get("/:deckId/review", async (c) => {
   const updatedCards = await Promise.allSettled(promises);
   for (const updatedCard of updatedCards) {
     if (updatedCard.status === "rejected") {
-      console.error(updatedCard.reason);
       return c.json(
         {
           message: "Could not process card",

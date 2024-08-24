@@ -1,6 +1,5 @@
 import { parseWithZod } from "@conform-to/zod";
 import { Hono } from "hono";
-// import { createEmptyCard, Rating } from "ts-fsrs";
 import {
   createDeckSchema,
   updateDeckSchema,
@@ -9,12 +8,11 @@ import {
 import type { Result } from "../../../lib/types";
 import { db } from "../../db/pool";
 import { cardTable, deckTable } from "../../db/schema";
-import { createUlid } from "../../utils/ulid";
 import {
   createPresignedUrl,
   uploadFile as uploadFileToR2,
 } from "../../utils/r2";
-import { and, eq, sql } from "drizzle-orm";
+import { and, count, eq, sql } from "drizzle-orm";
 import { createCardSchema } from "../../db/types";
 import type { z } from "zod";
 
@@ -95,33 +93,18 @@ deckRoute.delete("/:deckId/card/:cardId", async (c) => {
   const deckId = c.req.param("deckId");
   const cardId = c.req.param("cardId");
 
-  try {
-    // TODO: we probably need a join with deckTable
-    const result = await db
-      .delete(cardTable)
-      .where(
-        and(
-          eq(cardTable.id, cardId),
-          eq(cardTable.deckId, deckId),
-          eq(deckTable.userId, loggedInUser.id),
-        ),
-      );
-
-    if (result.rowsAffected === 0) {
-      return c.json(
-        { message: "Card not found or you don't have permission to delete it" },
-        404,
-      );
-    }
-
-    return c.json({ message: "Card deleted successfully" });
-  } catch (error) {
-    console.error("Error deleting card:", error);
-    return c.json(
-      { message: "An error occurred while deleting the card" },
-      500,
+  // TODO: we probably need a join with deckTable
+  await db
+    .delete(cardTable)
+    .where(
+      and(
+        eq(cardTable.id, cardId),
+        eq(cardTable.deckId, deckId),
+        eq(deckTable.userId, loggedInUser.id),
+      ),
     );
-  }
+
+  return c.json({ message: "Card deleted successfully" });
 });
 
 // Update card
@@ -131,43 +114,30 @@ deckRoute.put("/:deckId/card/:cardId", async (c) => {
     return c.json({ message: "Unauthorized" }, 403);
   }
 
+  const newFieldsResult = updateCardSchema.safeParse(await c.req.json());
+  if (!newFieldsResult.success) {
+    console.error(newFieldsResult.error.format())
+    return c.json({ message: "Unauthorized" }, 400);
+  }
   const deckId = c.req.param("deckId");
   const cardId = c.req.param("cardId");
-  const submission = parseWithZod(await c.req.json(), {
-    schema: updateCardSchema,
-  });
-
-  if (submission.status !== "success") {
-    return c.json(submission.reply(), 400);
-  }
-
-  try {
-    const result = await db
-      .update(cardTable)
-      .set(submission.value)
-      .where(
-        and(
-          eq(cardTable.id, cardId),
-          eq(cardTable.deckId, deckId),
-          eq(deckTable.userId, loggedInUser.id),
-        ),
-      );
-
-    if (result.rowsAffected === 0) {
-      return c.json(
-        { message: "Card not found or you don't have permission to update it" },
-        404,
-      );
-    }
-
-    return c.json({ message: "Card updated successfully" });
-  } catch (error) {
-    console.error("Error updating card:", error);
-    return c.json(
-      { message: "An error occurred while updating the card" },
-      500,
+  const [total] = await db
+    .select({ count: count() })
+    .from(deckTable)
+    .where(
+      and(eq(deckTable.id, deckId), eq(deckTable.userId, loggedInUser.id)),
     );
+  console.log(total, loggedInUser)
+  if (!total?.count) {
+    return c.json({ message: "Unauthorized" }, 400);
   }
+
+  await db
+    .update(cardTable)
+    .set(newFieldsResult.data)
+    .where(eq(cardTable.id, cardId));
+
+  return c.json({ message: "Card updated successfully" });
 });
 
 deckRoute.get("/:deckId/review", async (c) => {
@@ -201,7 +171,6 @@ deckRoute.get("/:deckId/review", async (c) => {
     .innerJoin(deckTable, eq(cardTable.deckId, deckTable.id))
     .where(
       and(
-        // lt(cardTable.due, Date.now()),
         eq(deckTable.userId, loggedInUser.id),
         eq(deckTable.id, c.req.param("deckId")),
       ),
@@ -274,29 +243,14 @@ deckRoute.put("/:deckId", async (c) => {
     return c.json(submission.reply(), 400);
   }
 
-  try {
-    const result = await db
-      .update(deckTable)
-      .set(submission.value)
-      .where(
-        and(eq(deckTable.id, deckId), eq(deckTable.userId, loggedInUser.id)),
-      );
-
-    if (result.rowsAffected === 0) {
-      return c.json(
-        { message: "Deck not found or you don't have permission to update it" },
-        404,
-      );
-    }
-
-    return c.json({ message: "Deck updated successfully" });
-  } catch (error) {
-    console.error("Error updating deck:", error);
-    return c.json(
-      { message: "An error occurred while updating the deck" },
-      500,
+  await db
+    .update(deckTable)
+    .set(submission.value)
+    .where(
+      and(eq(deckTable.id, deckId), eq(deckTable.userId, loggedInUser.id)),
     );
-  }
+
+  return c.json({ message: "Deck updated successfully" });
 });
 
 deckRoute.get("/", async (c) => {

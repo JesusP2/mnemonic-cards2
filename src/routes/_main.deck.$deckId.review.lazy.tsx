@@ -1,4 +1,4 @@
-import { useQuery } from '@tanstack/react-query';
+import { useMutation, useQuery } from '@tanstack/react-query';
 import { createLazyFileRoute, useParams } from '@tanstack/react-router';
 import { deckReviewQueryOptions } from '../lib/queries';
 import DOMPurify from 'dompurify';
@@ -35,6 +35,24 @@ function Review() {
   const query = useQuery(deckReviewQueryOptions(params.deckId));
   const [currentCard, setCurrentCard] = useState<ClientSideCard | null>(null);
   const [isAnswerBeingShown, showAnswer] = useState(false);
+  const updateCardMutation = useMutation({
+    meta: {
+      type: 'notification',
+    },
+    mutationFn: async ({
+      deckId,
+      cardId,
+      card,
+    }: { deckId: string; cardId: string; card: ClientSideCard }) => {
+      const res = await fetch(`/api/deck/${deckId}/card/${cardId}`, {
+        method: 'PUT',
+        body: JSON.stringify(card),
+      });
+      if (!res.ok) {
+        throw new Error('Could not update card');
+      }
+    },
+  });
 
   useEffect(() => {
     if (!query.data) return;
@@ -118,17 +136,14 @@ function Review() {
         return [...oldData];
       },
     );
-
-    const res = await fetch(
-      `/api/deck/${params.deckId}/card/${currentCard.id}/review`,
-      {
-        method: 'PUT',
-        body: JSON.stringify(newCard),
-      },
-    );
-    if (!res.ok) {
-      console.error('wrong');
-    }
+    newCard.due = newCard.due && new Date(newCard.due).getTime();
+    newCard.last_review =
+      newCard.last_review && new Date(newCard.last_review).getTime();
+    updateCardMutation.mutate({
+      deckId: params.deckId,
+      cardId: currentCard.id,
+      card: newCard,
+    });
   }
   if (query.isLoading) {
     return <div>loading...</div>;

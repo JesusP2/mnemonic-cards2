@@ -89,7 +89,6 @@ function Review() {
       3: 'good',
       4: 'easy',
     } as const;
-
     const newRatingType = ratingToRatingType[grade] as keyof UserDeckDashboard;
     const currentRatingType = ratingToRatingType[
       currentCard.rating as Grade

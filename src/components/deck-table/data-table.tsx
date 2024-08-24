@@ -88,14 +88,24 @@ export const columns: ColumnDef<UserDeckDashboard>[] = [
         },
       });
       const handleDeleteDeck = () => {
-        deleteMutation.mutateAsync(row.original.id).then(() => {
-          queryClient.setQueryData(
-            ['user-decks'],
-            (oldData: Record<string, unknown>[]) => {
-              return oldData.filter((record) => record.id !== row.original.id);
-            },
-          );
+        queryClient.removeQueries({
+          queryKey: ['deck-review-', row.original.id],
         });
+        queryClient
+          .invalidateQueries({
+            queryKey: ['deck-review-', row.original.id],
+          })
+          .then(() => deleteMutation.mutateAsync(row.original.id))
+          .then(() =>
+            queryClient.setQueryData(
+              ['user-decks'],
+              (oldData: Record<string, unknown>[]) => {
+                return oldData.filter(
+                  (record) => record.id !== row.original.id,
+                );
+              },
+            ),
+          );
       };
 
       return (
@@ -217,9 +227,9 @@ export function DataTableDemo() {
                       {header.isPlaceholder
                         ? null
                         : flexRender(
-                            header.column.columnDef.header,
-                            header.getContext(),
-                          )}
+                          header.column.columnDef.header,
+                          header.getContext(),
+                        )}
                     </TableHead>
                   );
                 })}

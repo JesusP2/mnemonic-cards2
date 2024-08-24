@@ -119,16 +119,16 @@ function Review() {
       },
     );
 
-    // const res = await fetch(
-    //   `/api/deck/${params.deckId}/card/${currentCard.id}/review`,
-    //   {
-    //     method: 'PUT',
-    //     body: JSON.stringify(updatedCard),
-    //   },
-    // );
-    // if (!res.ok) {
-    //   console.error('wrong');
-    // }
+    const res = await fetch(
+      `/api/deck/${params.deckId}/card/${currentCard.id}/review`,
+      {
+        method: 'PUT',
+        body: JSON.stringify(newCard),
+      },
+    );
+    if (!res.ok) {
+      console.error('wrong');
+    }
   }
   if (query.isLoading) {
     return <div>loading...</div>;

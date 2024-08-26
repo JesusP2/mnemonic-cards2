@@ -48,7 +48,6 @@ function Account() {
         setLastResult(json);
         return;
       }
-      await queryClient.invalidateQueries();
       openModal(true);
     },
     defaultValue: {

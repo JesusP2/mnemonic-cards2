@@ -47,7 +47,6 @@ function ResetPasswordToken() {
         setLastResult(json);
         return;
       }
-      await queryClient.invalidateQueries();
       navigate({ to: '/me' });
     },
     defaultValue: {

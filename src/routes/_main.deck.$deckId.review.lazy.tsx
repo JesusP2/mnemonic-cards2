@@ -1,17 +1,17 @@
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { createLazyFileRoute, useParams } from '@tanstack/react-router';
-import { deckReviewQueryOptions } from '../lib/queries';
 import DOMPurify from 'dompurify';
-import { useEffect, useState } from 'react';
 import { marked } from 'marked';
-import { Button } from '../components/ui/button';
+import { useEffect, useState } from 'react';
 import { type Card, type Grade, Rating } from 'ts-fsrs';
-import type { ClientSideCard } from '../server/db/types';
-import type { UserDeckDashboard } from '../lib/types';
-import { fsrsScheduler } from '../lib/fsrs';
-import { queryClient } from '../lib/query-client';
-import { db } from '../lib/indexdb';
+import { Button } from '../components/ui/button';
 import { fileToBase64 } from '../lib/file-to-base64';
+import { fsrsScheduler } from '../lib/fsrs';
+import { db } from '../lib/indexdb';
+import { deckReviewQueryOptions, profileQueryOptions } from '../lib/queries';
+import { queryClient } from '../lib/query-client';
+import type { UserDeckDashboard } from '../lib/types';
+import type { ClientSideCard } from '../server/db/types';
 
 export const Route = createLazyFileRoute('/_main/deck/$deckId/review')({
   component: Review,
@@ -31,8 +31,9 @@ async function transformKeysToUrls(keys: string[]) {
 }
 
 function Review() {
+  const profileQuery = useQuery(profileQueryOptions)
   const params = useParams({ from: '/_main/deck/$deckId/review' });
-  const query = useQuery(deckReviewQueryOptions(params.deckId));
+  const deckReviewQuery = useQuery(deckReviewQueryOptions(params.deckId));
   const [currentCard, setCurrentCard] = useState<ClientSideCard | null>(null);
   const [isAnswerBeingShown, showAnswer] = useState(false);
   const updateCardMutation = useMutation({
@@ -54,13 +55,13 @@ function Review() {
     },
   });
 
-  useEffect(() => {
-    if (!query.data) return;
-    const card = query.data.find(
+  async function getNextCard() {
+    if (!deckReviewQuery.data) return null;
+    const card = deckReviewQuery.data?.find(
       (card) => card.due && new Date(card.due).getTime() < new Date().getTime(),
     );
     if (!card) {
-      return;
+      return null;
     }
     if (
       (card.frontFilesMetadata.length &&
@@ -72,25 +73,30 @@ function Review() {
           'https://mnemonic-cards.13e14d558cce799d0040255703bae354.r2.cloudflarestorage.com',
         ))
     ) {
-      transformKeysToUrls(card.frontFilesMetadata)
-        .then((promises) => Promise.all(promises))
-        .then((keyUrlPairs) => {
-          for (const { url, key } of keyUrlPairs) {
-            card.frontMarkdown = card.frontMarkdown.replaceAll(key, url);
-          }
-          return transformKeysToUrls(card.backFilesMetadata);
-        })
-        .then((promises) => Promise.all(promises))
-        .then((keyUrlPairs) => {
-          for (const { url, key } of keyUrlPairs) {
-            card.backMarkdown = card.backMarkdown.replaceAll(key, url);
-          }
-          setCurrentCard(card);
-        });
-    } else {
-      setCurrentCard(card);
+      const frontKeyUrlPairs = await Promise.all(
+        await transformKeysToUrls(card.frontFilesMetadata),
+      );
+      for (const { url, key } of frontKeyUrlPairs) {
+        card.frontMarkdown = card.frontMarkdown.replaceAll(key, url);
+      }
+      const backKeyUrlPairs = await Promise.all(
+        await transformKeysToUrls(card.backFilesMetadata),
+      );
+      for (const { url, key } of backKeyUrlPairs) {
+        card.backMarkdown = card.backMarkdown.replaceAll(key, url);
+      }
     }
-  }, [query.data]);
+    return card;
+  }
+
+  // biome-ignore lint/correctness/useExhaustiveDependencies: <explanation>
+  useEffect(() => {
+    getNextCard().then((card) => {
+      if (card) {
+        setCurrentCard(card);
+      }
+    });
+  }, [deckReviewQuery.data]);
 
   async function updateCard(grade: Grade) {
     if (!currentCard) {
@@ -112,7 +118,7 @@ function Review() {
       currentCard.rating as Grade
     ] as keyof UserDeckDashboard;
 
-    queryClient.setQueryData(['user-decks'], (oldData: UserDeckDashboard[]) => {
+    queryClient.setQueryData(['user-decks-', profileQuery.data?.username], (oldData: UserDeckDashboard[]) => {
       return oldData.map((data) => {
         if (data.id === params.deckId && newRatingType === currentRatingType) {
           return { ...data };
@@ -144,8 +150,11 @@ function Review() {
       cardId: currentCard.id,
       card: newCard,
     });
+    const nextCard = await getNextCard();
+    setCurrentCard(nextCard);
+    showAnswer(false);
   }
-  if (query.isLoading) {
+  if (deckReviewQuery.isLoading) {
     return <div>loading...</div>;
   }
   if (currentCard === null) {
@@ -160,7 +169,7 @@ function Review() {
           __html: DOMPurify.sanitize(
             marked.parse(
               currentCard[
-              isAnswerBeingShown ? 'backMarkdown' : 'frontMarkdown'
+                isAnswerBeingShown ? 'backMarkdown' : 'frontMarkdown'
               ] || '',
             ) as string,
           ),

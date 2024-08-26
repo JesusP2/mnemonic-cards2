@@ -5,9 +5,11 @@ import {
   useForm,
 } from '@conform-to/react';
 import { parseWithZod } from '@conform-to/zod';
-import { type ReactNode, useState } from 'react';
-import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useState } from 'react';
+import { toast } from 'sonner';
 import { createDeckSchema } from '../lib/schemas';
+import { createUlid } from '../server/utils/ulid';
 import { Button } from './ui/button';
 import {
   Dialog,
@@ -20,18 +22,17 @@ import {
 import { Input } from './ui/input';
 import { Label } from './ui/label';
 import { Textarea } from './ui/textarea';
-import { toast } from 'sonner';
-import { createUlid } from '../server/utils/ulid';
+import { profileQueryOptions } from '../lib/queries';
 
 export function CreateDeck() {
   const [isOpen, setOpen] = useState(false);
   const [lastResult, setLastResult] = useState(null);
   const queryClient = useQueryClient();
+  const profileQuery = useQuery(profileQueryOptions)
   const createDeckMutation = useMutation({
     meta: {
       type: 'notification',
     },
-    mutationKey: ['user-decks'],
     mutationFn: async (formData: FormData) => {
       const res = await fetch('/api/deck', {
         method: 'POST',
@@ -62,7 +63,7 @@ export function CreateDeck() {
       context.formData.set('id', deckId);
       setOpen(false);
       toast.success('Deck created');
-      queryClient.setQueryData(['user-decks'], (oldData: unknown) => {
+      queryClient.setQueryData(['user-decks-', profileQuery.data?.username], (oldData: unknown) => {
         const newDeck = {
           name: context.formData.get('name'),
           id: deckId,

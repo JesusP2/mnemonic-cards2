@@ -14,10 +14,10 @@ import { userModel } from '../data-access/users';
 import { db } from '../db/pool';
 import { VerifyEmail } from '../emails/verify-email';
 import { hashPassword } from '../lucia';
-import { createUlid } from '../utils/ulid';
 import { sendEmail } from '../utils/email';
 import { uploadFile } from '../utils/r2';
 import { emailRateLimiter, rateLimitFn } from '../utils/rate-limiter';
+import { createUlid } from '../utils/ulid';
 
 export const accountRoute = new Hono();
 accountRoute.put('/', async (c) => {

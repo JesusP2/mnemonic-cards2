@@ -32,7 +32,7 @@ export const Route = createLazyFileRoute('/_main/settings/profile')({
 });
 
 function Profile() {
-  const query = useQuery(profileQueryOptions);
+  const profileQuery = useQuery(profileQueryOptions);
   const [avatar, setAvatar] = useState<null | string>(null);
   const [isEmailVerificationDialogOpen, openEmailVerificationDialog] =
     useState(false);
@@ -44,7 +44,7 @@ function Profile() {
     onValidate: ({ formData }) => {
       return parseWithZod(formData, {
         schema: profileSchema.superRefine((data, ctx) => {
-          if (query.data?.email && !data.email) {
+          if (profileQuery.data?.email && !data.email) {
             ctx.addIssue({
               code: z.ZodIssueCode.custom,
               path: ['email'],
@@ -73,8 +73,8 @@ function Profile() {
       setAvatar(null);
     },
     defaultValue: {
-      username: query.data?.username,
-      email: query.data?.email,
+      username: profileQuery.data?.username,
+      email: profileQuery.data?.email,
       avatar: null,
     },
   });
@@ -91,9 +91,9 @@ function Profile() {
       <form className="grid gap-6" id={form.id} onSubmit={form.onSubmit}>
         <div>
           <label className="relative group size-[96px] block overflow-hidden  rounded-full">
-            {avatar || query.data?.avatar ? (
+            {avatar || profileQuery.data?.avatar ? (
               <img
-                src={avatar || (query.data?.avatar as string)}
+                src={avatar || (profileQuery.data?.avatar as string)}
                 alt=""
                 className="size-[96px]"
               />
@@ -138,15 +138,15 @@ function Profile() {
           <Label htmlFor="email" className="font-medium">
             Email
           </Label>
-          {query.data?.isOauth ? (
+          {profileQuery.data?.isOauth ? (
             <TooltipProvider>
               <Tooltip>
                 <TooltipTrigger asChild>
                   <Input
                     id="email"
                     name="email"
-                    placeholder={query.data?.isOauth ? '' : 'example@gmail.com'}
-                    disabled={query.data?.isOauth}
+                    placeholder={profileQuery.data?.isOauth ? '' : 'example@gmail.com'}
+                    disabled={profileQuery.data?.isOauth}
                     defaultValue={fields.email.value}
                   />
                 </TooltipTrigger>

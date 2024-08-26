@@ -1,6 +1,7 @@
 import { Link, useNavigate } from '@tanstack/react-router';
 import { Home, LogOut, Settings } from 'lucide-react';
 import { FiChevronRight } from 'react-icons/fi';
+import { queryClient } from '../lib/query-client';
 import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar';
 import { Button } from './ui/button';
 import {
@@ -12,7 +13,6 @@ import {
   DropdownMenuShortcut,
   DropdownMenuTrigger,
 } from './ui/dropdown-menu';
-import { queryClient } from '../lib/query-client';
 
 export function UserDropdown({
   user,
@@ -59,13 +59,13 @@ export function UserDropdown({
           onSubmit={async (e) => {
             e.preventDefault();
             const res = await fetch('/api/auth/signout', {
-              method: 'POST'
-            })
+              method: 'POST',
+            });
             if (!res.ok) {
               return;
             }
             await queryClient.invalidateQueries({
-              queryKey: ['profile']
+              queryKey: ['profile'],
             });
             navigate({ to: '/auth/signin' });
           }}

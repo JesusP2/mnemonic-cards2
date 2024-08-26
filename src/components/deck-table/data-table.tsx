@@ -13,10 +13,12 @@ import {
 } from '@tanstack/react-table';
 import * as React from 'react';
 
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Link } from '@tanstack/react-router';
-import { userDecksQueryOptions } from '../../lib/queries';
+import { toast } from 'sonner';
+import { profileQueryOptions, userDecksQueryOptions } from '../../lib/queries';
 import type { UserDeckDashboard } from '../../lib/types';
+import { CreateDeck } from '../create-deck';
 import { Button } from '../ui/button';
 import {
   DropdownMenu,
@@ -36,8 +38,6 @@ import {
   TableHeader,
   TableRow,
 } from '../ui/table';
-import { CreateDeck } from '../create-deck';
-import { toast } from 'sonner';
 
 export const columns: ColumnDef<UserDeckDashboard>[] = [
   {
@@ -70,6 +70,7 @@ export const columns: ColumnDef<UserDeckDashboard>[] = [
     enableHiding: false,
     cell: ({ row }) => {
       const queryClient = useQueryClient();
+      const profileQuery = useQuery(profileQueryOptions)
       const deleteMutation = useMutation({
         meta: {
           type: 'notification',
@@ -98,7 +99,7 @@ export const columns: ColumnDef<UserDeckDashboard>[] = [
           .then(() => deleteMutation.mutateAsync(row.original.id))
           .then(() =>
             queryClient.setQueryData(
-              ['user-decks'],
+              ['user-decks-', profileQuery.data?.username],
               (oldData: Record<string, unknown>[]) => {
                 return oldData.filter(
                   (record) => record.id !== row.original.id,
@@ -227,9 +228,9 @@ export function DataTableDemo() {
                       {header.isPlaceholder
                         ? null
                         : flexRender(
-                          header.column.columnDef.header,
-                          header.getContext(),
-                        )}
+                            header.column.columnDef.header,
+                            header.getContext(),
+                          )}
                     </TableHead>
                   );
                 })}

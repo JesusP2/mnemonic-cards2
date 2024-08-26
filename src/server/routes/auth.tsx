@@ -8,8 +8,8 @@ import {
 } from '../data-access/sessions';
 import { userModel } from '../data-access/users';
 import { hashPassword } from '../lucia';
-import { createUlid } from '../utils/ulid';
 import { authRateLimiter, rateLimitMiddleware } from '../utils/rate-limiter';
+import { createUlid } from '../utils/ulid';
 
 export const authRoute = new Hono();
 

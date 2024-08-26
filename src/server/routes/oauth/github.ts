@@ -1,40 +1,40 @@
-import { generateState } from "arctic";
-import { and, eq } from "drizzle-orm";
-import { Hono } from "hono";
-import { getCookie, setCookie } from "hono/cookie";
-import { createUserSession } from "../../data-access/sessions.js";
-import { userModel } from "../../data-access/users.js";
-import { db } from "../../db/pool.js";
-import { oauthAccountTable } from "../../db/schema/index.js";
-import { github } from "../../lucia.js";
-import { createUlid } from "../../utils/ulid.js";
-import { uploadFile } from "../../utils/r2.js";
+import { generateState } from 'arctic';
+import { and, eq } from 'drizzle-orm';
+import { Hono } from 'hono';
+import { getCookie, setCookie } from 'hono/cookie';
+import { createUserSession } from '../../data-access/sessions.js';
+import { userModel } from '../../data-access/users.js';
+import { db } from '../../db/pool.js';
+import { oauthAccountTable } from '../../db/schema/index.js';
+import { github } from '../../lucia.js';
+import { uploadFile } from '../../utils/r2.js';
+import { createUlid } from '../../utils/ulid.js';
 
 export const githubLoginRouter = new Hono();
 
-githubLoginRouter.get("/auth/github", async (c) => {
+githubLoginRouter.get('/auth/github', async (c) => {
   const state = generateState();
   const url = await github.createAuthorizationURL(state);
-  setCookie(c, "github_oauth_state", state, {
-    path: "/",
-    secure: process.env.NODE_ENV === "production",
+  setCookie(c, 'github_oauth_state', state, {
+    path: '/',
+    secure: process.env.NODE_ENV === 'production',
     httpOnly: true,
     maxAge: 60 * 10,
-    sameSite: "Lax",
+    sameSite: 'Lax',
   });
   return c.redirect(url.toString());
 });
 
-githubLoginRouter.get("/auth/github/callback", async (c) => {
-  const code = c.req.query("code")?.toString() ?? null;
-  const state = c.req.query("state")?.toString() ?? null;
+githubLoginRouter.get('/auth/github/callback', async (c) => {
+  const code = c.req.query('code')?.toString() ?? null;
+  const state = c.req.query('state')?.toString() ?? null;
   const storedState = getCookie(c).github_oauth_state ?? null;
   if (!code || !state || !storedState || state !== storedState) {
-    return c.redirect("/auth/signin");
+    return c.redirect('/auth/signin');
   }
   try {
     const tokens = await github.validateAuthorizationCode(code);
-    const githubUserResponse = await fetch("https://api.github.com/user", {
+    const githubUserResponse = await fetch('https://api.github.com/user', {
       headers: {
         Authorization: `Bearer ${tokens.accessToken}`,
       },
@@ -45,27 +45,27 @@ githubLoginRouter.get("/auth/github/callback", async (c) => {
       .from(oauthAccountTable)
       .where(
         and(
-          eq(oauthAccountTable.providerId, "github"),
+          eq(oauthAccountTable.providerId, 'github'),
           eq(oauthAccountTable.providerUserId, githubUser.id),
         ),
       );
     if (existingUser) {
       await createUserSession(c, existingUser.userId);
-      setCookie(c, "revalidate", "true", {
-        path: "/",
+      setCookie(c, 'revalidate', 'true', {
+        path: '/',
         maxAge: 10,
       });
-      return c.redirect("/me");
+      return c.redirect('/me');
     }
     const userId = createUlid();
     let avatarKey = null;
     if (githubUser.avatar_url) {
       const pictureRes = await fetch(githubUser.avatar_url);
-      const resType = pictureRes.headers.get("Content-Type");
-      const allowedContentTypes = ["image/png", "image/jpeg", "image/webp"];
+      const resType = pictureRes.headers.get('Content-Type');
+      const allowedContentTypes = ['image/png', 'image/jpeg', 'image/webp'];
       if (resType && allowedContentTypes.includes(resType)) {
         const buf = Buffer.from(await pictureRes.arrayBuffer());
-        const extension = resType.split("/")[1];
+        const extension = resType.split('/')[1];
         avatarKey = `${createUlid()}.${extension}`;
         await uploadFile(buf, avatarKey);
       }
@@ -75,7 +75,7 @@ githubLoginRouter.get("/auth/github/callback", async (c) => {
       await tx.insert(oauthAccountTable).values({
         id: oauthId,
         userId: userId,
-        providerId: "github",
+        providerId: 'github',
         providerUserId: githubUser.id,
       });
       await userModel.create(
@@ -90,13 +90,13 @@ githubLoginRouter.get("/auth/github/callback", async (c) => {
       );
     });
     await createUserSession(c, userId);
-    setCookie(c, "revalidate", "true", {
-      path: "/",
+    setCookie(c, 'revalidate', 'true', {
+      path: '/',
       maxAge: 10,
     });
-    return c.redirect("/me");
+    return c.redirect('/me');
   } catch (e) {
-    return c.redirect("/auth/signin");
+    return c.redirect('/auth/signin');
   }
 });
 

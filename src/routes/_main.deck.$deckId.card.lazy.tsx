@@ -7,21 +7,23 @@ import DOMPurify from 'dompurify';
 import { Image } from 'lucide-react';
 import { marked } from 'marked';
 import { useRef, useState } from 'react';
+import { toast } from 'sonner';
+import { Rating, createEmptyCard } from 'ts-fsrs';
 import type { z } from 'zod';
+import { Button } from '../components/ui/button';
 import {
   Tooltip,
   TooltipContent,
   TooltipProvider,
   TooltipTrigger,
 } from '../components/ui/tooltip';
-import type { fileSchema } from '../lib/schemas';
-import { Button } from '../components/ui/button';
+import { db } from '../lib/indexdb';
 import { queryClient } from '../lib/query-client';
+import type { fileSchema } from '../lib/schemas';
 import type { UserDeckDashboard } from '../lib/types';
 import { createUlid } from '../server/utils/ulid';
-import { createEmptyCard, Rating } from 'ts-fsrs';
-import { db } from '../lib/indexdb';
-import { toast } from 'sonner';
+import { profileQueryOptions } from '../lib/queries';
+import { useQuery } from '@tanstack/react-query';
 
 export const Route = createLazyFileRoute('/_main/deck/$deckId/card')({
   component: CreateCard,
@@ -38,6 +40,7 @@ function CreateCard() {
   const [currentView, setCurrentView] = useState<'front' | 'back'>('front');
   const cardRef = useRef<null | HTMLDivElement>(null);
   const [cursorPosition, setCursorPosition] = useState(0);
+  const profileQuery = useQuery(profileQueryOptions)
 
   const markdown = currentView === 'front' ? frontMarkdown : backMarkdown;
   const files = currentView === 'front' ? frontFiles : backFiles;
@@ -83,7 +86,7 @@ function CreateCard() {
       }
     });
 
-    queryClient.setQueryData(['user-decks'], (oldData: UserDeckDashboard[]) => {
+    queryClient.setQueryData(['user-decks-', profileQuery.data?.username], (oldData: UserDeckDashboard[]) => {
       return oldData.map((data) => {
         if (data.id === params.deckId) {
           return { ...data, again: data.again + 1 };
@@ -125,7 +128,7 @@ function CreateCard() {
       const error = await res.json();
       throw new Error(error.message);
     }
-    toast.success('Card created')
+    toast.success('Card created');
     navigate({ to: '/me' });
   }
 
@@ -140,10 +143,7 @@ function CreateCard() {
     }
   }
 
-  function handleCursorPositionChange(
-    // biome-ignore lint/suspicious/noExplicitAny: <explanation>
-    e: any,
-  ) {
+  function handleCursorPositionChange(e: any) {
     setCursorPosition(e.target.selectionStart);
   }
 

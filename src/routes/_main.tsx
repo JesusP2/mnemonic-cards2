@@ -10,9 +10,10 @@ export const Route = createFileRoute('/_main')({
   component: Layout,
   beforeLoad: async () => {
     // artificial delay to avoid race condition.
-    // queryClient doesnt hydrate from localStorage fast enough causing the profileQueryOptions to fire.
+    // queryClient doesnt hydrate from localStorage fast enough causing profileQueryOptions to fire.
     await new Promise((resolve) => setTimeout(resolve, 1));
     let profile = await queryClient.fetchQuery(profileQueryOptions);
+    // when you login with oauth, profile is null, you need to invalidate the profile querykey and refetch it
     if (document.cookie.includes('revalidate=true')) {
       queryClient.invalidateQueries({ queryKey: ['profile'] });
       profile = await queryClient.fetchQuery(profileQueryOptions);

@@ -145,7 +145,9 @@ function Profile() {
                   <Input
                     id="email"
                     name="email"
-                    placeholder={profileQuery.data?.isOauth ? '' : 'example@gmail.com'}
+                    placeholder={
+                      profileQuery.data?.isOauth ? '' : 'example@gmail.com'
+                    }
                     disabled={profileQuery.data?.isOauth}
                     defaultValue={fields.email.value}
                   />

@@ -31,7 +31,7 @@ async function transformKeysToUrls(keys: string[]) {
 }
 
 function Review() {
-  const profileQuery = useQuery(profileQueryOptions)
+  const profileQuery = useQuery(profileQueryOptions);
   const params = useParams({ from: '/_main/deck/$deckId/review' });
   const deckReviewQuery = useQuery(deckReviewQueryOptions(params.deckId));
   const [currentCard, setCurrentCard] = useState<ClientSideCard | null>(null);
@@ -118,21 +118,27 @@ function Review() {
       currentCard.rating as Grade
     ] as keyof UserDeckDashboard;
 
-    queryClient.setQueryData(['user-decks-', profileQuery.data?.username], (oldData: UserDeckDashboard[]) => {
-      return oldData.map((data) => {
-        if (data.id === params.deckId && newRatingType === currentRatingType) {
-          return { ...data };
-        }
-        if (data.id === params.deckId) {
-          return {
-            ...data,
-            [newRatingType]: (data[newRatingType] as number) + 1,
-            [currentRatingType]: (data[currentRatingType] as number) - 1,
-          };
-        }
-        return data;
-      });
-    });
+    queryClient.setQueryData(
+      ['user-decks-', profileQuery.data?.username],
+      (oldData: UserDeckDashboard[]) => {
+        return oldData.map((data) => {
+          if (
+            data.id === params.deckId &&
+            newRatingType === currentRatingType
+          ) {
+            return { ...data };
+          }
+          if (data.id === params.deckId) {
+            return {
+              ...data,
+              [newRatingType]: (data[newRatingType] as number) + 1,
+              [currentRatingType]: (data[currentRatingType] as number) - 1,
+            };
+          }
+          return data;
+        });
+      },
+    );
 
     queryClient.setQueryData(
       ['deck-review-', params.deckId],

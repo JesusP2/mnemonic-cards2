@@ -24,7 +24,7 @@ export const Route = createFileRoute('/_main')({
   },
   loader: async () => {
     return {
-      data: defer(queryClient.ensureQueryData(userDecksQueryOptions)),
+      data: defer(queryClient.ensureQueryData(userDecksQueryOptions())),
     };
   },
 });

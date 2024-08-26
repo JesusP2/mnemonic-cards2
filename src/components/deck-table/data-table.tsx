@@ -15,7 +15,6 @@ import * as React from 'react';
 
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Link } from '@tanstack/react-router';
-import { toast } from 'sonner';
 import { profileQueryOptions, userDecksQueryOptions } from '../../lib/queries';
 import type { UserDeckDashboard } from '../../lib/types';
 import { CreateDeck } from '../create-deck';
@@ -70,7 +69,7 @@ export const columns: ColumnDef<UserDeckDashboard>[] = [
     enableHiding: false,
     cell: ({ row }) => {
       const queryClient = useQueryClient();
-      const profileQuery = useQuery(profileQueryOptions)
+      const profileQuery = useQuery(profileQueryOptions);
       const deleteMutation = useMutation({
         meta: {
           type: 'notification',
@@ -148,7 +147,7 @@ export const columns: ColumnDef<UserDeckDashboard>[] = [
 ];
 
 export function DataTableDemo() {
-  const userDecksQuery = useQuery(userDecksQueryOptions);
+  const userDecksQuery = useQuery(userDecksQueryOptions());
   const [sorting, setSorting] = React.useState<SortingState>([]);
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>(
     [],

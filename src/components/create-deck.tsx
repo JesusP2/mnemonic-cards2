@@ -8,6 +8,7 @@ import { parseWithZod } from '@conform-to/zod';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useState } from 'react';
 import { toast } from 'sonner';
+import { profileQueryOptions } from '../lib/queries';
 import { createDeckSchema } from '../lib/schemas';
 import { createUlid } from '../server/utils/ulid';
 import { Button } from './ui/button';
@@ -22,13 +23,12 @@ import {
 import { Input } from './ui/input';
 import { Label } from './ui/label';
 import { Textarea } from './ui/textarea';
-import { profileQueryOptions } from '../lib/queries';
 
 export function CreateDeck() {
   const [isOpen, setOpen] = useState(false);
   const [lastResult, setLastResult] = useState(null);
   const queryClient = useQueryClient();
-  const profileQuery = useQuery(profileQueryOptions)
+  const profileQuery = useQuery(profileQueryOptions);
   const createDeckMutation = useMutation({
     meta: {
       type: 'notification',
@@ -63,20 +63,23 @@ export function CreateDeck() {
       context.formData.set('id', deckId);
       setOpen(false);
       toast.success('Deck created');
-      queryClient.setQueryData(['user-decks-', profileQuery.data?.username], (oldData: unknown) => {
-        const newDeck = {
-          name: context.formData.get('name'),
-          id: deckId,
-          easy: 0,
-          good: 0,
-          hard: 0,
-          again: 0,
-        };
-        if (Array.isArray(oldData)) {
-          return [...oldData, newDeck];
-        }
-        return [newDeck];
-      });
+      queryClient.setQueryData(
+        ['user-decks-', profileQuery.data?.username],
+        (oldData: unknown) => {
+          const newDeck = {
+            name: context.formData.get('name'),
+            id: deckId,
+            easy: 0,
+            good: 0,
+            hard: 0,
+            again: 0,
+          };
+          if (Array.isArray(oldData)) {
+            return [...oldData, newDeck];
+          }
+          return [newDeck];
+        },
+      );
       createDeckMutation.mutate(context.formData);
     },
     defaultValue: {

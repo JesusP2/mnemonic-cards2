@@ -1,3 +1,4 @@
+import { useQuery } from '@tanstack/react-query';
 import {
   createLazyFileRoute,
   useNavigate,
@@ -18,12 +19,11 @@ import {
   TooltipTrigger,
 } from '../components/ui/tooltip';
 import { db } from '../lib/indexdb';
+import { profileQueryOptions } from '../lib/queries';
 import { queryClient } from '../lib/query-client';
 import type { fileSchema } from '../lib/schemas';
 import type { UserDeckDashboard } from '../lib/types';
 import { createUlid } from '../server/utils/ulid';
-import { profileQueryOptions } from '../lib/queries';
-import { useQuery } from '@tanstack/react-query';
 
 export const Route = createLazyFileRoute('/_main/deck/$deckId/card')({
   component: CreateCard,
@@ -40,7 +40,7 @@ function CreateCard() {
   const [currentView, setCurrentView] = useState<'front' | 'back'>('front');
   const cardRef = useRef<null | HTMLDivElement>(null);
   const [cursorPosition, setCursorPosition] = useState(0);
-  const profileQuery = useQuery(profileQueryOptions)
+  const profileQuery = useQuery(profileQueryOptions);
 
   const markdown = currentView === 'front' ? frontMarkdown : backMarkdown;
   const files = currentView === 'front' ? frontFiles : backFiles;
@@ -86,14 +86,17 @@ function CreateCard() {
       }
     });
 
-    queryClient.setQueryData(['user-decks-', profileQuery.data?.username], (oldData: UserDeckDashboard[]) => {
-      return oldData.map((data) => {
-        if (data.id === params.deckId) {
-          return { ...data, again: data.again + 1 };
-        }
-        return data;
-      });
-    });
+    queryClient.setQueryData(
+      ['user-decks-', profileQuery.data?.username],
+      (oldData: UserDeckDashboard[]) => {
+        return oldData.map((data) => {
+          if (data.id === params.deckId) {
+            return { ...data, again: data.again + 1 };
+          }
+          return data;
+        });
+      },
+    );
 
     queryClient.setQueryData(
       ['deck-review-', params.deckId],

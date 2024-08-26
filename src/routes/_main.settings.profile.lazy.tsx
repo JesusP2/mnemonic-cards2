@@ -26,6 +26,7 @@ import { TypographyH4 } from '../components/ui/typography';
 import { profileQueryOptions } from '../lib/queries';
 import { queryClient } from '../lib/query-client';
 import { profileSchema } from '../lib/schemas';
+import { toast } from 'sonner';
 
 export const Route = createLazyFileRoute('/_main/settings/profile')({
   component: Profile,
@@ -56,6 +57,14 @@ function Profile() {
     },
     onSubmit: async (e, context) => {
       e.preventDefault();
+      queryClient.removeQueries({
+        queryKey: ['profile'],
+      });
+      await queryClient.invalidateQueries({
+        queryKey: ['profile'],
+      });
+      toast.success('Profile updated!')
+      setAvatar(null);
       const res = await fetch('/api/account', {
         method: 'PUT',
         body: context.formData,
@@ -69,8 +78,6 @@ function Profile() {
       if (json && 'message' in json) {
         openEmailVerificationDialog(true);
       }
-      await queryClient.invalidateQueries();
-      setAvatar(null);
     },
     defaultValue: {
       username: profileQuery.data?.username,

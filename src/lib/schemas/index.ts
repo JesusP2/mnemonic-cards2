@@ -63,6 +63,7 @@ export const createCardSchema = z.object({
 
 export const updateCardSchema = z.object({
   due: z.coerce.number(),
+  rating: z.coerce.number(),
   state: z.coerce.number(),
   reps: z.coerce.number(),
   lapses: z.coerce.number(),

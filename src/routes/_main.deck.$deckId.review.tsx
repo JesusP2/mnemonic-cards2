@@ -1,5 +1,9 @@
 import { useMutation, useQuery } from '@tanstack/react-query';
-import { createLazyFileRoute, useParams } from '@tanstack/react-router';
+import {
+  createFileRoute,
+  defer,
+  useParams,
+} from '@tanstack/react-router';
 import DOMPurify from 'dompurify';
 import { marked } from 'marked';
 import { useEffect, useState } from 'react';
@@ -13,8 +17,15 @@ import { queryClient } from '../lib/query-client';
 import type { UserDeckDashboard } from '../lib/types';
 import type { ClientSideCard } from '../server/db/types';
 
-export const Route = createLazyFileRoute('/_main/deck/$deckId/review')({
+export const Route = createFileRoute('/_main/deck/$deckId/review')({
   component: Review,
+  loader: async ({ params }) => {
+    return {
+      data: defer(
+        queryClient.ensureQueryData(deckReviewQueryOptions(params.deckId)),
+      ),
+    };
+  },
 });
 
 async function transformKeysToUrls(keys: string[]) {

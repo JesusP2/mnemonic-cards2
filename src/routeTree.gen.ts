@@ -121,7 +121,7 @@ const MainDeckDeckIdReviewLazyRoute = MainDeckDeckIdReviewLazyImport.update({
   path: '/deck/$deckId/review',
   getParentRoute: () => MainRoute,
 } as any).lazy(() =>
-  import('./routes/_main.deck.$deckId.review.lazy').then((d) => d.Route),
+  import('./routes/_main.deck.$deckId.review').then((d) => d.Route),
 )
 
 const MainDeckDeckIdCardLazyRoute = MainDeckDeckIdCardLazyImport.update({

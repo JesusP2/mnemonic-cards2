@@ -23,6 +23,13 @@ import {
 import { Input } from './ui/input';
 import { Label } from './ui/label';
 import { Textarea } from './ui/textarea';
+import { Plus } from 'lucide-react';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from './ui/tooltip';
 
 export function CreateDeck() {
   const [isOpen, setOpen] = useState(false);
@@ -89,11 +96,20 @@ export function CreateDeck() {
   });
   return (
     <Dialog open={isOpen} onOpenChange={(open) => setOpen(open)}>
-      <DialogTrigger asChild>
-        <Button variant="outline" onClick={() => setOpen(true)}>
-          +
-        </Button>
-      </DialogTrigger>
+      <TooltipProvider>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <DialogTrigger asChild>
+              <Button variant="outline" onClick={() => setOpen(true)}>
+                <Plus size={15} />
+              </Button>
+            </DialogTrigger>
+          </TooltipTrigger>
+          <TooltipContent>
+            <p>Create deck</p>
+          </TooltipContent>
+        </Tooltip>
+      </TooltipProvider>
       <DialogContent className="sm:max-w-[425px]" aria-describedby={undefined}>
         <DialogHeader>
           <DialogTitle>Create new deck</DialogTitle>

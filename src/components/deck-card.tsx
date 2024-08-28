@@ -15,6 +15,7 @@ import {
 import { Button, buttonVariants } from './ui/button';
 import { Link } from '@tanstack/react-router';
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
+import { Badge } from './ui/badge';
 
 function OptionsDropdown({ deckId }: { deckId: string }) {
   const profileQuery = useQuery(profileQueryOptions);
@@ -76,14 +77,36 @@ function OptionsDropdown({ deckId }: { deckId: string }) {
   );
 }
 
-export function DeckCard({ title, id }: { title: string; id: string }) {
+export function DeckCard({
+  title,
+  id,
+  easy,
+  good,
+  hard,
+  again,
+}: {
+  title: string;
+  id: string;
+  easy: number;
+  good: number;
+  hard: number;
+  again: number;
+}) {
   return (
-    <Card className="w-[16rem] rounded-md border-foreground/20 mx-auto">
+    <Card className="w-[22rem] rounded-md border-foreground/20 mx-auto">
       <CardHeader className="space-y-2 relative">
-        <CardTitle className="text-lg font-bold text-center truncate px-2">{title}</CardTitle>
+        <CardTitle className="text-lg font-bold text-center truncate px-2">
+          {title}
+        </CardTitle>
         <OptionsDropdown deckId={id} />
       </CardHeader>
-      <CardContent className="flex items-center justify-between pt-4">
+      <CardContent className="items-center justify-between pt-4">
+        <div className="gap-x-2 flex mb-4 mx-auto justify-center">
+          <Badge>Easy {easy}</Badge>
+          <Badge>Good {good}</Badge>
+          <Badge>Hard {hard}</Badge>
+          <Badge>Again {again}</Badge>
+        </div>
         <Link
           to="/deck/$deckId/review"
           params={{ deckId: id }}
@@ -95,4 +118,3 @@ export function DeckCard({ title, id }: { title: string; id: string }) {
     </Card>
   );
 }
-

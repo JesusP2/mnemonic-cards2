@@ -16,6 +16,15 @@ import { userDecksQueryOptions } from '../lib/queries';
 import type { UserDeckDashboard } from '../lib/types';
 import { CreateDeck } from '../components/create-deck';
 import { DeckCard } from '../components/deck-card';
+import { Button } from '../components/ui/button';
+import { RefreshCw } from 'lucide-react';
+import { queryClient } from '../lib/query-client';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '../components/ui/tooltip';
 
 export const Route = createLazyFileRoute('/_main/me')({
   component: Me,
@@ -75,13 +84,31 @@ function Me() {
           className="max-w-sm"
         />
         <CreateDeck />
+        <TooltipProvider>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                onClick={async () => {
+                  await queryClient.invalidateQueries();
+                }}
+                variant="outline"
+              >
+                <RefreshCw size={15} />
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>
+              <p>Sync</p>
+            </TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
       </div>
-      <div className="grid grid-cols-[repeat(auto-fill,_minmax(16rem,_1fr))] gap-4">
+      <div className="grid grid-cols-[repeat(auto-fill,_minmax(22rem,_1fr))] gap-4">
         {table.getRowModel().rows?.length
           ? table
               .getRowModel()
               .rows.map((row) => (
                 <DeckCard
+                  {...row.original}
                   title={row.original.name}
                   id={row.original.id}
                   key={row.id}

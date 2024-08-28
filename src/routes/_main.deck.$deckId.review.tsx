@@ -1,9 +1,5 @@
 import { useMutation, useQuery } from '@tanstack/react-query';
-import {
-  createFileRoute,
-  defer,
-  useParams,
-} from '@tanstack/react-router';
+import { createFileRoute, defer, useParams } from '@tanstack/react-router';
 import DOMPurify from 'dompurify';
 import { marked } from 'marked';
 import { useEffect, useState } from 'react';
@@ -16,6 +12,7 @@ import { deckReviewQueryOptions, profileQueryOptions } from '../lib/queries';
 import { queryClient } from '../lib/query-client';
 import type { UserDeckDashboard } from '../lib/types';
 import type { ClientSideCard } from '../server/db/types';
+import { Card as Cardd, CardContent, CardHeader, CardTitle } from '../components/ui/card';
 
 export const Route = createFileRoute('/_main/deck/$deckId/review')({
   component: Review,
@@ -175,7 +172,18 @@ function Review() {
     return <div>loading...</div>;
   }
   if (currentCard === null) {
-    return <div>nothing to show</div>;
+    return (
+      <Cardd className="max-w-sm">
+        <CardHeader>
+          <CardTitle className="text-2xl text-center">
+            Nothing to study, comeback later
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="grid place-items-center">
+          <Button>Go back home</Button>
+        </CardContent>
+      </Cardd>
+    );
   }
 
   return (

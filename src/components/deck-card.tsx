@@ -62,7 +62,6 @@ function OptionsDropdown({ deckId }: { deckId: string }) {
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end">
         <DropdownMenuLabel>Actions</DropdownMenuLabel>
-        <DropdownMenuItem>Rename deck</DropdownMenuItem>
         <DropdownMenuItem asChild>
           <Link to="/deck/$deckId/card" params={{ deckId: deckId }}>
             Add card

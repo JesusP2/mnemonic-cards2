@@ -1,10 +1,15 @@
 import { useMutation, useQuery } from '@tanstack/react-query';
-import { createFileRoute, defer, useParams } from '@tanstack/react-router';
+import {
+  createFileRoute,
+  defer,
+  Link,
+  useParams,
+} from '@tanstack/react-router';
 import DOMPurify from 'dompurify';
 import { marked } from 'marked';
 import { useEffect, useState } from 'react';
 import { type Card, type Grade, Rating } from 'ts-fsrs';
-import { Button } from '../components/ui/button';
+import { Button, buttonVariants } from '../components/ui/button';
 import { fileToBase64 } from '../lib/file-to-base64';
 import { fsrsScheduler } from '../lib/fsrs';
 import { db } from '../lib/indexdb';
@@ -12,7 +17,12 @@ import { deckReviewQueryOptions, profileQueryOptions } from '../lib/queries';
 import { queryClient } from '../lib/query-client';
 import type { UserDeckDashboard } from '../lib/types';
 import type { ClientSideCard } from '../server/db/types';
-import { Card as Cardd, CardContent, CardHeader, CardTitle } from '../components/ui/card';
+import {
+  Card as Cardd,
+  CardContent,
+  CardHeader,
+  CardTitle,
+} from '../components/ui/card';
 
 export const Route = createFileRoute('/_main/deck/$deckId/review')({
   component: Review,
@@ -173,16 +183,20 @@ function Review() {
   }
   if (currentCard === null) {
     return (
-      <Cardd className="max-w-sm">
-        <CardHeader>
-          <CardTitle className="text-2xl text-center">
-            Nothing to study, comeback later
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="grid place-items-center">
-          <Button>Go back home</Button>
-        </CardContent>
-      </Cardd>
+      <div className="grid place-items-center max-w-7xl">
+        <Cardd className="max-w-sm">
+          <CardHeader>
+            <CardTitle className="text-2xl text-center">
+              Nothing to study, comeback later
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="grid place-items-center">
+            <Link className={buttonVariants()} to="/me">
+              Go back home
+            </Link>
+          </CardContent>
+        </Cardd>
+      </div>
     );
   }
 

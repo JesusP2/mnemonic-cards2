@@ -13,15 +13,12 @@ import {
   DropdownMenuShortcut,
   DropdownMenuTrigger,
 } from './ui/dropdown-menu';
-import { useQuery } from '@tanstack/react-query';
-import { profileQueryOptions } from '../lib/queries';
 
 export function UserDropdown({
   user,
 }: {
   user: { username: string; email: string | null; avatar: string | null };
 }) {
-  const profileQuery = useQuery(profileQueryOptions);
   const navigate = useNavigate();
   return (
     <DropdownMenu>

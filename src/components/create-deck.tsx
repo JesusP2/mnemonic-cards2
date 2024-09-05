@@ -6,6 +6,7 @@ import {
 } from '@conform-to/react';
 import { parseWithZod } from '@conform-to/zod';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { Plus } from 'lucide-react';
 import { useState } from 'react';
 import { toast } from 'sonner';
 import { profileQueryOptions } from '../lib/queries';
@@ -23,7 +24,6 @@ import {
 import { Input } from './ui/input';
 import { Label } from './ui/label';
 import { Textarea } from './ui/textarea';
-import { Plus } from 'lucide-react';
 import {
   Tooltip,
   TooltipContent,

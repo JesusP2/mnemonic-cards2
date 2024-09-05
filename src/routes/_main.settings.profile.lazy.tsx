@@ -4,6 +4,7 @@ import { useQuery } from '@tanstack/react-query';
 import { createLazyFileRoute } from '@tanstack/react-router';
 import { CircleUser } from 'lucide-react';
 import { useState } from 'react';
+import { toast } from 'sonner';
 import { z } from 'zod';
 import { OTPForm } from '../components/form-otp';
 import { Button } from '../components/ui/button';
@@ -26,7 +27,6 @@ import { TypographyH4 } from '../components/ui/typography';
 import { profileQueryOptions } from '../lib/queries';
 import { queryClient } from '../lib/query-client';
 import { profileSchema } from '../lib/schemas';
-import { toast } from 'sonner';
 
 export const Route = createLazyFileRoute('/_main/settings/profile')({
   component: Profile,
@@ -63,7 +63,7 @@ function Profile() {
       await queryClient.invalidateQueries({
         queryKey: ['profile'],
       });
-      toast.success('Profile updated!')
+      toast.success('Profile updated!');
       setAvatar(null);
       const res = await fetch('/api/account', {
         method: 'PUT',

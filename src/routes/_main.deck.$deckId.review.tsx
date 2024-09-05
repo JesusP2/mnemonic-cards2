@@ -1,8 +1,8 @@
 import { useMutation, useQuery } from '@tanstack/react-query';
 import {
+  Link,
   createFileRoute,
   defer,
-  Link,
   useParams,
 } from '@tanstack/react-router';
 import DOMPurify from 'dompurify';
@@ -10,6 +10,12 @@ import { marked } from 'marked';
 import { useEffect, useState } from 'react';
 import { type Card, type Grade, Rating } from 'ts-fsrs';
 import { Button, buttonVariants } from '../components/ui/button';
+import {
+  CardContent,
+  CardHeader,
+  CardTitle,
+  Card as Cardd,
+} from '../components/ui/card';
 import { fileToBase64 } from '../lib/file-to-base64';
 import { fsrsScheduler } from '../lib/fsrs';
 import { db } from '../lib/indexdb';
@@ -17,12 +23,6 @@ import { deckReviewQueryOptions, profileQueryOptions } from '../lib/queries';
 import { queryClient } from '../lib/query-client';
 import type { UserDeckDashboard } from '../lib/types';
 import type { ClientSideCard } from '../server/db/types';
-import {
-  Card as Cardd,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from '../components/ui/card';
 
 export const Route = createFileRoute('/_main/deck/$deckId/review')({
   component: Review,

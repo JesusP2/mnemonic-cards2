@@ -17,7 +17,6 @@ import { TypographyH4 } from '../components/ui/typography';
 import { cn } from '../components/ui/utils';
 import { unselectedCss } from '../lib/constants';
 import { profileQueryOptions } from '../lib/queries';
-import { queryClient } from '../lib/query-client';
 import { changePasswordSchema } from '../lib/schemas';
 
 export const Route = createLazyFileRoute('/_main/settings/account')({

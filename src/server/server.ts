@@ -77,6 +77,7 @@ app.use('/assets/*', serveStatic({ root: isProd ? 'build/' : './' }));
 app.get('/*', (c) => c.html(html));
 
 if (isProd) {
+  console.log('hello');
   serve({ ...app, port: 3000 }, (info) => {
     console.log(`Listening on http://localhost:${info.port}`);
   });

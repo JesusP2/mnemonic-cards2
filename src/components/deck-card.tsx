@@ -1,9 +1,12 @@
 import { useMutation, useQuery } from '@tanstack/react-query';
-import { profileQueryOptions } from '../lib/queries';
-import { cn } from './ui/utils';
-import { queryClient } from '../lib/query-client';
-import { toast } from 'sonner';
+import { Link } from '@tanstack/react-router';
 import { EllipsisVertical } from 'lucide-react';
+import { toast } from 'sonner';
+import { profileQueryOptions } from '../lib/queries';
+import { queryClient } from '../lib/query-client';
+import { Badge } from './ui/badge';
+import { Button, buttonVariants } from './ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -12,10 +15,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from './ui/dropdown-menu';
-import { Button, buttonVariants } from './ui/button';
-import { Link } from '@tanstack/react-router';
-import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
-import { Badge } from './ui/badge';
+import { cn } from './ui/utils';
 
 function OptionsDropdown({ deckId }: { deckId: string }) {
   const profileQuery = useQuery(profileQueryOptions);

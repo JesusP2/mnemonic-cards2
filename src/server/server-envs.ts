@@ -1,4 +1,6 @@
 import * as z from 'zod';
+console.log('process:', process.env.NODE_ENV)
+console.log('process:', process.env.GOOGLE_CLIENT_ID)
 export const envs = z
   .object({
     NODE_ENV: z.string().min(1),

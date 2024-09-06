@@ -4,9 +4,9 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "start": "tsx --env-file=.env ./src/server/server.ts",
-    "fsrs": "tsx ./src/lib/fsrs/index.ts",
+    "start": "tsx ./src/server/server.tsx",
     "dev": "vite",
+    "preview": "wrangler pages dev",
     "email": "email dev -d ./src/server/emails",
     "build": "tsc -b && vite build",
     "lint": "biome check .",
@@ -82,7 +82,8 @@
     "zod": "^3.23.8"
   },
   "devDependencies": {
-    "@hono/vite-dev-server": "^0.12.2",
+    "@hono/vite-cloudflare-pages": "^0.4.2",
+    "@hono/vite-dev-server": "^0.15.1",
     "@tailwindcss/typography": "^0.5.13",
     "@tanstack/router-plugin": "^1.45.8",
     "@types/dompurify": "^3.0.5",
@@ -96,6 +97,7 @@
     "postcss": "^8.4.38",
     "tailwindcss": "^3.4.4",
     "typescript": "^5.2.2",
-    "vite": "^5.3.1"
+    "vite": "^5.3.1",
+    "wrangler": "^3.74.0"
   }
 }

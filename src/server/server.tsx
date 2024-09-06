@@ -1,5 +1,4 @@
 import { readFile } from 'node:fs/promises';
-import { serve } from '@hono/node-server';
 import { serveStatic } from '@hono/node-server/serve-static';
 import { Hono } from 'hono';
 import 'dotenv/config';
@@ -76,10 +75,20 @@ app.get('/api/profile', async (c) => {
 app.use('/assets/*', serveStatic({ root: isProd ? 'build/' : './' }));
 app.get('/*', (c) => c.html(html));
 
-if (isProd) {
-  console.log('hello');
-  serve({ ...app, port: 3000 }, (info) => {
-    console.log(`Listening on http://localhost:${info.port}`);
-  });
-}
+
+app.get('/', (c) => c.html(
+  // @ts-expect-error no idea what to do
+  <html lang="en">
+    <head>
+      {import.meta.env.PROD ? (
+        <script type="module" src="/static/client.js" />
+      ) : (
+        <script type="module" src="/src/client.ts" />
+      )}
+    </head>
+    <body>
+      <h1>Hello</h1>
+    </body>
+  </html>
+));
 export default app;

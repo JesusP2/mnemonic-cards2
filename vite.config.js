@@ -1,30 +1,34 @@
-import devServer from '@hono/vite-dev-server';
-import { TanStackRouterVite } from '@tanstack/router-plugin/vite';
-import react from '@vitejs/plugin-react';
-import { defineConfig } from 'vite';
+import devServer from "@hono/vite-dev-server";
+import build from "@hono/vite-cloudflare-pages";
+import adapter from "@hono/vite-dev-server/cloudflare";
+import { TanStackRouterVite } from "@tanstack/router-plugin/vite";
+import react from "@vitejs/plugin-react";
+import { defineConfig } from "vite";
 
 export default defineConfig({
-  server: {
-    port: 3000,
-  },
   build: {
-    outDir: 'build',
+    target: "es2022",
+    platform: 'node'
+  },
+  esbuild: {
+    target: "es2022",
+    platform: 'node',
+  },
+  optimizeDeps: {
+    esbuildOptions: {
+      target: "es2022",
+      platform: 'node'
+    },
   },
   plugins: [
+    build({
+      entry: "./src/server/server.tsx",
+    }),
     TanStackRouterVite(),
     react(),
     devServer({
-      entry: './src/server/server.ts',
-      exclude: [
-        // We need to override this option since the default setting doesn't fit
-        /.*\.tsx?($|\?)/,
-        /.*\.(s?css|less)($|\?)/,
-        /.*\.(svg|png)($|\?)/,
-        /^\/@.+$/,
-        /^\/favicon\.ico$/,
-        /^\/(public|assets|static)\/.+/,
-        /^\/node_modules\/.*/,
-      ],
+      adapter,
+      entry: "./src/server/server.tsx",
     }),
   ],
 });
